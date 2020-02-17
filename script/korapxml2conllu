@@ -1,0 +1,247 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use POSIX;
+use Getopt::Std;
+use Encode;
+use List::Util qw[min max];
+
+my $MAX_SENTENCE_LENGTH=10000;
+my $COMMENT_START="#";
+
+my $test=0;
+my $text_no=0;
+my %opts;
+my %plain_texts;
+my $usage=<<EOF;
+Usage: $0 [options] ZIPFILE [ZIPFILE...]
+
+Options:
+ -p pattern
+
+Description:
+ Convert KorAP-XML morpho zip to CoNLL(-U) format with all information necessary
+ for reconstruction in comment lines.
+
+Examples:
+ $0 /vol/corpora/DeReKo/current/KorAP/zip/zca15.tree_tagger.zip
+
+ ZIPSIGLEPATTERN='-x "*15/FEB*" "*15/MAR*"' $0 /vol/corpora/DeReKo/current/KorAP/zip/zca15.tree_tagger.zip
+
+ Results will be written to stdout
+EOF
+
+getopts('dhp:', \%opts);
+die $usage if($opts{h} || @ARGV == 0);
+my $debug=($opts{d}? 1 : 0);
+
+my $docid="";
+my ($current_id, $current_from, $current_to, $token);
+my $current;
+my ($unknown, $known) = (0, 0);
+my @current_lines;
+my %processedFilenames;
+my $zipsiglepattern = (defined($ENV{ZIPSIGLEPATTERN})? $ENV{ZIPSIGLEPATTERN} : "");
+
+my ($ID_idx, $FORM_idx, $LEMMA_idx, $UPOS_idx, $XPOS_idx, $FEATS_idx, $HEAD_idx, $DEPREC_idx, $DEPS_idx, $MISC_idx) = (0..9);
+
+foreach my $morpho_zip (@ARGV) {
+  die "cannot open $morpho_zip" if(! -r $morpho_zip);
+  my $data_zip = $morpho_zip;
+  if ($data_zip !~ /\.zip/ && $data_zip =~ /\.conllu?/i) {
+    open(CONLL, "<$data_zip") or die "cannot open $data_zip";
+    while(<CONLL>) {
+      print;
+    }
+    close(CONLL);
+    next;
+  }
+  $data_zip =~ s/\.([^.]+)\.zip$/.zip/;
+  my $foundry = $1;
+  die "cannot open data file $data_zip corresponding to $morpho_zip" if(! -r $data_zip);
+  
+  my $first=1;
+  my $pattern = (defined($opts{p})? $opts{p} : '');
+  my @conll = ("_") x 10;
+  my $filename;
+
+  my $morphocommand = "unzip -c $morpho_zip '*/${pattern}*/*/*/morpho.xml' $zipsiglepattern |";
+  print STDERR $morphocommand, "\n";
+  open (MORPHOPIPE, $morphocommand) or die "cannot unzip $morpho_zip";
+  open (PLAINTEXTPIPE, "unzip -c $data_zip '*/${pattern}*/*/data.xml' $zipsiglepattern |") or die "cannot unzip $data_zip";
+  print "$COMMENT_START foundry = $foundry\n";
+  while (<MORPHOPIPE>) {
+    if (/\s+inflating:\s+(.*)/) {
+      $filename=$1;
+      while($processedFilenames{$filename} && !eof(MORPHOPIPE)) {
+        print STDERR "WARNING: $filename already processed\n";
+        while (<MORPHOPIPE>) {
+          last if(/\s+inflating:\s+(.*)/);
+        }
+        $filename=$1 if(!eof(MORPHOPIPE) && /\s+inflating:\s+(.*)/);
+      }
+    } elsif(m@<layer\s+.*docid="([^"]+)"@) {
+      last if($test && $text_no++ > 3);
+      if(!$first) {
+        closeDoc(0);
+      }
+      $processedFilenames{$filename}=1;
+      $docid=$1;
+      @current_lines=();
+      $known=$unknown=0;
+      $current="";
+      if ($first) {
+          $first = 0;
+      }
+      if(!fetch_plaintext($docid)) { # skip this text
+        while (<MORPHOPIPE>) {
+          last if(m@</layer>@);
+        }
+      }
+      print STDOUT "$COMMENT_START filename = $filename\n$COMMENT_START text_id = $docid\n";
+      print STDERR "Analyzing $docid\n" if ($debug);
+    } elsif (m@<f\s+.*name="([^"]+)">([^<]+)</f>@) {
+      if ($1 eq "lemma") {
+        $conll[$LEMMA_idx] = $2;
+        $conll[$LEMMA_idx] =~ s/[\t\n\r]//g; # make sure that lemmas never contain tabs or newlines
+        if($conll[$LEMMA_idx] eq 'UNKNOWN') {
+          $conll[$LEMMA_idx] = "--";
+          $unknown++;
+        } else {
+          $known++;
+        }
+      } elsif ($1 eq 'pos' || $1 eq "ctag") {
+        $unknown++;
+        $conll[$XPOS_idx] = $conll[$UPOS_idx] = $2;
+      } elsif ($1 eq 'msd') {
+        $conll[$FEATS_idx] = $2;
+      } elsif ($1 eq 'certainty') {
+        $conll[$MISC_idx] = $2;
+      }
+    } elsif (/<span /) {
+      ($current_id) = /id="[^0-9]*([^\"]*)"/;
+      ($current_from) = /from="([^\"]*)"/;
+      ($current_to) = /to="([^\"]*)"/;
+      print STDERR "found span: $current_id $current_from $current_to\n" if($debug);
+      $token = substr($plain_texts{$docid}, $current_from, min($current_to - $current_from, 32));
+      if (!defined $token) {
+        print STDERR "WARNING: could not retrieve token for $docid at $current_from-$current_to/", length($plain_texts{$docid}), " - ending with: ", substr($plain_texts{$docid},length($plain_texts{$docid})-10), "\n";
+        $token = "_";
+      }
+      $token=~s/[\t\n\r]//g; # make sure that tokens never contain tabs or newlines
+      @conll = ("_") x 10;
+      $conll[$FORM_idx] = encode("utf-8", $token);
+    } elsif (m@</fs>@) {
+      my @vals = ($current_from, $current_to);
+      print STDERR "joining : ", join(" ", @vals), "\n" if($debug);
+      push @current_lines, \@vals;
+      # convert gathered information to CONLL
+      $conll[$ID_idx] = $#current_lines+1;
+      $current .= join("\t", @conll) . "\n"; # conll columns
+      if($conll[$XPOS_idx] eq '$.' || ($conll[$XPOS_idx] eq 'SENT' && $token eq '.') || $known + $unknown >= $MAX_SENTENCE_LENGTH) {
+        $current .= "\n";
+        if($known + $unknown > 0) { # only print sentence if it contains some words
+          printTokenRanges();
+          print STDOUT $current;
+        }
+        $current=""; $known=0; $unknown=0;
+        @current_lines = ();
+      }
+      while (<MORPHOPIPE>) {
+        last if (m@</span>@);    # only consider first interpretation
+      }
+    }
+  }
+  $current .= "\n";
+  closeDoc(1);
+  close(MORPHOPIPE);
+  close(PLAINTEXTPIPE);
+}
+exit;
+
+sub printTokenRanges {
+  print "$COMMENT_START start_offsets = ", $current_lines[0]->[0];
+  foreach my $t (@current_lines) {
+    print STDOUT " $t->[0]";
+  }
+  print "\n$COMMENT_START end_offsets = ", $current_lines[$#current_lines]->[1];
+  foreach my $t (@current_lines) {
+    print STDOUT " $t->[1]";
+  }
+  print "\n";
+}
+
+sub closeDoc {
+  my ($end) = @_;
+  print STDERR "closing doc\n" if($debug);
+  if($known + $unknown > 0) { # only parse a sentence if it has some words
+    chomp $current;
+    chomp $current;
+    chomp $current;
+    $current .= "\n\n";
+    printTokenRanges();
+    print STDOUT $current;
+  }
+}
+
+# read data.xml to figure out the tokens
+# (ideally tokens should also be in in morpho.xml, but they are not)
+sub fetch_plaintext {
+  my ($target_id) = @_;
+  my $docid;
+  my $text_started=0;
+
+  if($plain_texts{$target_id}) {
+#    print STDERR "already got $target_id\n";
+    return;
+  }
+  while(<PLAINTEXTPIPE>) {
+    if(/<raw_text[^>]+docid="([^"]*)/) {
+      $docid=$1;
+      $text_started=0;
+    } elsif (m@<text>(.*)</text>@) {
+      $_= decode("utf-8", $1, Encode::FB_DEFAULT);
+      s/&lt;/</go;
+      s/&gt;/>/go;
+      s/&amp;/&/go;
+      tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
+      $plain_texts{$docid} = $_;
+      last if($docid eq $target_id);
+    } elsif (m@<text>(.*)@) {
+      $_= decode("utf-8", $1, Encode::FB_DEFAULT);
+      s/&lt;/</go;
+      s/&gt;/>/go;
+      s/&amp;/&/go;
+      tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
+      $plain_texts{$docid} = "$_ ";
+      $text_started=1;
+    } elsif ($text_started && m@(.*)</text>@) {
+      $_= decode("utf-8", $1, Encode::FB_DEFAULT);
+      s/&lt;/</go;
+      s/&gt;/>/go;
+      s/&amp;/&/go;
+      tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
+      $plain_texts{$docid} .= $_;
+      $text_started=0;
+      last if($docid eq $target_id);
+    } elsif ($text_started) {
+      chomp;
+      $_ = decode("utf-8", $_, Encode::FB_DEFAULT) . ' ';
+      s/&lt;/</go;
+      s/&gt;/>/go;
+      s/&amp;/&/go;
+      tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
+      $plain_texts{$docid} .= $_;
+    }
+  }
+  if(defined($ENV{PLAINTEXTFILTER})) {
+    if ($plain_texts{$docid} !~ $ENV{PLAINTEXTFILTER}) {
+      $plain_texts{$docid} = undef;
+      print STDERR "Skipping $docid\n";
+      return(undef);
+    } else {
+      print STDERR "Using $docid\n";
+    }
+  } 
+  return(1);
+}
