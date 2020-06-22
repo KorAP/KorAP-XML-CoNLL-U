@@ -123,7 +123,7 @@ foreach my $morpho_zip (@ARGV) {
       ($current_from) = /from="([^\"]*)"/;
       ($current_to) = /to="([^\"]*)"/;
       print STDERR "found span: $current_id $current_from $current_to\n" if($debug);
-      $token = substr($plain_texts{$docid}, $current_from, min($current_to - $current_from, 32));
+      $token = substr($plain_texts{$docid}, $current_from, $current_to - $current_from);
       if (!defined $token) {
         print STDERR "WARNING: could not retrieve token for $docid at $current_from-$current_to/", length($plain_texts{$docid}), " - ending with: ", substr($plain_texts{$docid},length($plain_texts{$docid})-10), "\n";
         $token = "_";
