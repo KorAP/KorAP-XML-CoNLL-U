@@ -11,7 +11,9 @@ The state of the package is very preliminary. Currently, only a script `korapxml
 
 ```shell script
 perl Makefile.PL
-make install
+make
+make test
+# make install
 ```
 
 ## Command Line Invocation
