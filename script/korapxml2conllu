@@ -71,7 +71,7 @@ foreach my $morpho_zip (@ARGV) {
   open (PLAINTEXTPIPE, "unzip -c $data_zip '*/${pattern}*/*/data.xml' $zipsiglepattern |") or die "cannot unzip $data_zip";
   print "$COMMENT_START foundry = $foundry\n";
   while (<MORPHOPIPE>) {
-    if (/\s+inflating:\s+(.*)/) {
+    if (/^  inflating: (.*)/) {
       $filename=$1;
       while($processedFilenames{$filename} && !eof(MORPHOPIPE)) {
         print STDERR "WARNING: $filename already processed\n";
@@ -80,7 +80,7 @@ foreach my $morpho_zip (@ARGV) {
         }
         $filename=$1 if(!eof(MORPHOPIPE) && /\s+inflating:\s+(.*)/);
       }
-    } elsif(m@<layer\s+.*docid="([^"]+)"@) {
+    } elsif(m@^\s*<layer\s+.*docid="([^"]+)"@) {
       last if($test && $text_no++ > 3);
       if(!$first) {
         closeDoc(0);
@@ -100,7 +100,7 @@ foreach my $morpho_zip (@ARGV) {
       }
       print STDOUT "$COMMENT_START filename = $filename\n$COMMENT_START text_id = $docid\n";
       print STDERR "Analyzing $docid\n" if ($debug);
-    } elsif (m@<f\s+.*name="([^"]+)">([^<]+)</f>@) {
+    } elsif (m@^\s*<f\s+.*name="([^"]+)">([^<]+)</f>@) {
       if ($1 eq "lemma") {
         $conll[$LEMMA_idx] = $2;
         $conll[$LEMMA_idx] =~ s/[\t\n\r]//g; # make sure that lemmas never contain tabs or newlines
@@ -131,7 +131,7 @@ foreach my $morpho_zip (@ARGV) {
       $token=~s/[\t\n\r]//g; # make sure that tokens never contain tabs or newlines
       @conll = ("_") x 10;
       $conll[$FORM_idx] = encode("utf-8", $token);
-    } elsif (m@</fs>@) {
+    } elsif (m@^\s*</fs>@) {
       my @vals = ($current_from, $current_to);
       print STDERR "joining : ", join(" ", @vals), "\n" if($debug);
       push @current_lines, \@vals;
