@@ -5,15 +5,14 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-  NAME         => 'korapxmlconllu',
+  NAME         => 'korapxml2conllu',
   AUTHOR       => 'Marc Kupietz',
-  ABSTRACT     => 'Conversion between CoNLL-U formats  KorAP-XML',
+  ABSTRACT     => 'Conversion from KorAP-XML zip files to CoNLL-U format',
   VERSION      => '0.1',
   LICENSE      => 'freebsd',
   BUILD_REQUIRES => {
   },
   PREREQ_PM => {
-    'IO::Compress::Zip' => '2.091',
     'POSIX'=> 0,
     'Getopt::Std' => 0,
     'Encode' => 0,
