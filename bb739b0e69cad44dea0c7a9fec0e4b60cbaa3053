@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42cd17e7_b93a8c76",
+        "filename": "Makefile.PL",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2020-09-23T10:37:02Z",
+      "side": 1,
+      "message": "Versions for at least Test::Script and List::Util would be a good idea.",
+      "range": {
+        "startLine": 21,
+        "startChar": 26,
+        "endLine": 21,
+        "endChar": 27
+      },
+      "revId": "bb739b0e69cad44dea0c7a9fec0e4b60cbaa3053",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49454bb1_e13d34fa",
+        "filename": "Readme.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2020-09-23T10:37:02Z",
+      "side": 1,
+      "message": "It should be noted, that a compatible version of unzip is required.\nThat was often a problem with KorAP::XML::Krill in minimum dockers or VMs.",
+      "range": {
+        "startLine": 10,
+        "startChar": 2,
+        "endLine": 10,
+        "endChar": 15
+      },
+      "revId": "bb739b0e69cad44dea0c7a9fec0e4b60cbaa3053",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef9e8aa5_c9e1d1cf",
+        "filename": "t/test.t",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2020-09-23T10:37:02Z",
+      "side": 1,
+      "message": "I didn\u0027t know about Test::Script - always relied on Test::Output. Pretty nice!",
+      "range": {
+        "startLine": 4,
+        "startChar": 4,
+        "endLine": 4,
+        "endChar": 17
+      },
+      "revId": "bb739b0e69cad44dea0c7a9fec0e4b60cbaa3053",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc41bc2f_5eea3ca9",
+        "filename": "t/test.t",
+        "patchSetId": 2
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2020-09-23T10:37:02Z",
+      "side": 1,
+      "message": "A lot of options are not tested:\n- Passing multiple zips at a time\n- Passing a connlu-File\n- \"p\"attern parameter\n- \"d\"ebug parameter\n- ZIPSIGLEPATTERN env\n- PLAINTEXTFILTER env\n\nAlso not tested:\n- Behaviour when having the same filename inflating in a single run",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 13
+      },
+      "revId": "bb739b0e69cad44dea0c7a9fec0e4b60cbaa3053",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c",
+      "unresolved": true
+    }
+  ]
+}
