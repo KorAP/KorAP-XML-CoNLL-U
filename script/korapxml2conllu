@@ -4,7 +4,6 @@ use warnings;
 use POSIX;
 use Getopt::Std;
 use Encode;
-use List::Util qw[min max];
 
 my $MAX_SENTENCE_LENGTH=10000;
 my $COMMENT_START="#";
@@ -181,7 +180,6 @@ sub printTokenRanges {
 }
 
 sub closeDoc {
-  my ($end) = @_;
   print STDERR "closing doc\n" if($debug);
   if($known + $unknown > 0) { # only parse a sentence if it has some words
     chomp $current;
