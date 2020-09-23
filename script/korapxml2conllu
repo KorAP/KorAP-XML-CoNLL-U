@@ -45,6 +45,15 @@ my $zipsiglepattern = (defined($ENV{ZIPSIGLEPATTERN})? $ENV{ZIPSIGLEPATTERN} : "
 
 my ($ID_idx, $FORM_idx, $LEMMA_idx, $UPOS_idx, $XPOS_idx, $FEATS_idx, $HEAD_idx, $DEPREC_idx, $DEPS_idx, $MISC_idx) = (0..9);
 
+my $UNZIP = `sh -c 'command -v unzip'`;
+chomp $UNZIP;
+
+
+if ($UNZIP eq '') {
+  warn('No unzip executable found in PATH.');
+  return 0;
+};
+
 foreach my $morpho_zip (@ARGV) {
   die "cannot open $morpho_zip" if(! -r $morpho_zip);
   my $data_zip = $morpho_zip;
@@ -65,10 +74,10 @@ foreach my $morpho_zip (@ARGV) {
   my @conll = ("_") x 10;
   my $filename;
 
-  my $morphocommand = "unzip -c $morpho_zip '*/${pattern}*/*/*/morpho.xml' $zipsiglepattern |";
+  my $morphocommand = "$UNZIP -c $morpho_zip '*/${pattern}*/*/*/morpho.xml' $zipsiglepattern |";
   # print STDERR $morphocommand, "\n";
   open (MORPHOPIPE, $morphocommand) or die "cannot unzip $morpho_zip";
-  open (PLAINTEXTPIPE, "unzip -c $data_zip '*/${pattern}*/*/data.xml' $zipsiglepattern |") or die "cannot unzip $data_zip";
+  open (PLAINTEXTPIPE, "$UNZIP -c $data_zip '*/${pattern}*/*/data.xml' $zipsiglepattern |") or die "cannot unzip $data_zip";
   print "$COMMENT_START foundry = $foundry\n";
   while (<MORPHOPIPE>) {
     if (/^  inflating: (.*)/) {
