@@ -15,10 +15,9 @@ WriteMakefile(
     PREREQ_PM        => {
         'POSIX'        => 0,
         'Getopt::Std'  => 0,
-        'Encode'       => 0,
-        'List::Util'   => 0,
-        'Test::More'   => 0,
-        'Test::Script' => 0
+        'Encode'       => "3.07",
+        'Test::More'   => "1.302177",
+        'Test::Script' => "1.12"
     },
     MIN_PERL_VERSION => '5.016',
     EXE_FILES        => [ './script/korapxml2conllu' ]
