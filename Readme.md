@@ -4,7 +4,7 @@ Tool package to convert between KorAP XML format and [CoNLL-U format](https://un
 
 ## Description
 
-The state of the package is very preliminary. Currently, only a script `korapxml2conllu` is provided. It converts KorAP XML zip "morpho" files with POS and lemma annotations to corresponding CoNLL-U files with foundry information, text ids and token offsets in comments.
+The state of the package is very preliminary. Currently, only a script `korapxml2conllu` is provided. It converts KorAP XML zip "base" and "morpho" (with POS and lemma annotations) files to corresponding CoNLL-U files with foundry information, text ids and token offsets in comments.
 
 **! This software is in its early stages and not stable yet! Use it on your own risk! It is very likely to be changed or replaced.**
 ## Installation
@@ -64,6 +64,29 @@ $ korapxml2conllu wpd17.tree_tagger.zip | head -42
 1            Von          von          APPR         APPR         _            _            _            _            0.999214
 2            1968         1968         CARD         CARD         _            _            _            _            1.000000
 3            bis          bis          APPR         APPR         _            _            _            _            0.861721
+
+
+$ ./script/korapxml2conllu t/data/goe.zip | head -20
+# foundry = base
+# filename = GOE/AGA/00000/base/tokens.xml  
+# text_id = GOE_AGA.00000
+# start_offsets = 0 0 9 12
+# end_offsets = 22 8 11 22
+1	Campagne	_	_	_	_	_	_	_	_
+2	in	_	_	_	_	_	_	_	_
+3	Frankreich	_	_	_	_	_	_	_	_
+
+# start_offsets = 23 23
+# end_offsets = 27 27
+1	1792	_	_	_	_	_	_	_	_
+
+# start_offsets = 28 28 33 37 40 44 53
+# end_offsets = 54 32 36 39 43 53 54
+1	auch	_	_	_	_	_	_	_	_
+2	ich	_	_	_	_	_	_	_	_
+3	in	_	_	_	_	_	_	_	_
+4	der	_	_	_	_	_	_	_	_
+5	Champagne	_	_	_	_	_	_	_	_
 
 ```
 
