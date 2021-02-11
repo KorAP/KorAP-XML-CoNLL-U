@@ -12,6 +12,8 @@ my $test=0;
 my $text_no=0;
 my %opts;
 my %plain_texts;
+my %sentence_ends;
+
 my $usage=<<EOF;
 Usage: $0 [options] ZIPFILE [ZIPFILE...]
 
@@ -19,10 +21,12 @@ Options:
  -p pattern
 
 Description:
- Convert KorAP-XML morpho zip to CoNLL(-U) format with all information necessary
+ Convert KorAP-XML base or morpho zips to CoNLL(-U) format with all information necessary
  for reconstruction in comment lines.
 
 Examples:
+ $0 /vol/corpora/DeReKo/current/KorAP/zip/zca20.zip
+
  $0 /vol/corpora/DeReKo/current/KorAP/zip/zca15.tree_tagger.zip
 
  ZIPSIGLEPATTERN='-x "*15/FEB*" "*15/MAR*"' $0 /vol/corpora/DeReKo/current/KorAP/zip/zca15.tree_tagger.zip
@@ -41,6 +45,7 @@ my ($unknown, $known) = (0, 0);
 my @current_lines;
 my %processedFilenames;
 my $zipsiglepattern = (defined($ENV{ZIPSIGLEPATTERN})? $ENV{ZIPSIGLEPATTERN} : "");
+my $baseOnly;
 
 my ($ID_idx, $FORM_idx, $LEMMA_idx, $UPOS_idx, $XPOS_idx, $FEATS_idx, $HEAD_idx, $DEPREC_idx, $DEPS_idx, $MISC_idx) = (0..9);
 
@@ -73,20 +78,29 @@ foreach my $morpho_zip (@ARGV) {
   my @conll = ("_") x 10;
   my $filename;
 
-  my $morphocommand = "$UNZIP -c $morpho_zip '*/${pattern}*/*/*/morpho.xml' $zipsiglepattern |";
-  # print STDERR $morphocommand, "\n";
-  open (MORPHOPIPE, $morphocommand) or die "cannot unzip $morpho_zip";
-  open (PLAINTEXTPIPE, "$UNZIP -c $data_zip '*/${pattern}*/*/data.xml' $zipsiglepattern |") or die "cannot unzip $data_zip";
+  $baseOnly = $morpho_zip eq $data_zip;
+  my ($morphoOrTokenCommand, $plaintextAndStructureCommand);
+  if(!$baseOnly) {
+    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${pattern}*/*/*/morpho.xml' $zipsiglepattern |";
+    $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${pattern}*/*/data.xml' $zipsiglepattern |";
+  } else {
+    $foundry = "base";
+    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${pattern}*/*/*/tokens.xml' $zipsiglepattern |";
+    $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${pattern}*/*/[sd][ta]*.xml' $zipsiglepattern |";
+  }
+
+  open (MORPHO_OR_TOKENPIPE, $morphoOrTokenCommand) or die "cannot unzip $morpho_zip";
+  open (PLAINTEXTPIPE, $plaintextAndStructureCommand) or die "cannot unzip $data_zip";
   print "$COMMENT_START foundry = $foundry\n";
-  while (<MORPHOPIPE>) {
+  while (<MORPHO_OR_TOKENPIPE>) {
     if (/^  inflating: (.*)/) {
       $filename=$1;
-      while($processedFilenames{$filename} && !eof(MORPHOPIPE)) {
+      while($processedFilenames{$filename} && !eof(MORPHO_OR_TOKENPIPE)) {
         print STDERR "WARNING: $filename already processed\n";
-        while (<MORPHOPIPE>) {
+        while (<MORPHO_OR_TOKENPIPE>) {
           last if(/\s+inflating:\s+(.*)/);
         }
-        $filename=$1 if(!eof(MORPHOPIPE) && /\s+inflating:\s+(.*)/);
+        $filename=$1 if(!eof(MORPHO_OR_TOKENPIPE) && /\s+inflating:\s+(.*)/);
       }
     } elsif(m@^\s*<layer\s+.*docid="([^"]+)"@) {
       last if($test && $text_no++ > 3);
@@ -102,7 +116,7 @@ foreach my $morpho_zip (@ARGV) {
           $first = 0;
       }
       if(!fetch_plaintext($docid)) { # skip this text
-        while (<MORPHOPIPE>) {
+        while (<MORPHO_OR_TOKENPIPE>) {
           last if(m@</layer>@);
         }
       }
@@ -139,6 +153,24 @@ foreach my $morpho_zip (@ARGV) {
       $token=~s/[\t\n\r]//g; # make sure that tokens never contain tabs or newlines
       @conll = ("_") x 10;
       $conll[$FORM_idx] = encode("utf-8", $token);
+      if($baseOnly) {
+        my @vals = ($current_from, $current_to);
+        print STDERR "joining : ", join(" ", @vals), "\n" if($debug);
+        push @current_lines, \@vals;
+        $known++;
+        $conll[$ID_idx] = $#current_lines+1;
+        $current .= join("\t", @conll) . "\n"; # conll columns
+        fetch_plaintext($docid);
+        if ($sentence_ends{$docid}{$current_to}) {
+          $current .= "\n";
+          printTokenRanges();
+          print STDOUT $current;
+          $current = "";
+          $known = 0;
+          $unknown = 0;
+          @current_lines = ();
+        }
+      }
     } elsif (m@^\s*</fs>@) {
       my @vals = ($current_from, $current_to);
       print STDERR "joining : ", join(" ", @vals), "\n" if($debug);
@@ -155,14 +187,14 @@ foreach my $morpho_zip (@ARGV) {
         $current=""; $known=0; $unknown=0;
         @current_lines = ();
       }
-      while (<MORPHOPIPE>) {
+      while (<MORPHO_OR_TOKENPIPE>) {
         last if (m@</span>@);    # only consider first interpretation
       }
     }
   }
   $current .= "\n";
   closeDoc(1);
-  close(MORPHOPIPE);
+  close(MORPHO_OR_TOKENPIPE);
   close(PLAINTEXTPIPE);
 }
 exit;
@@ -197,15 +229,26 @@ sub fetch_plaintext {
   my ($target_id) = @_;
   my $docid;
   my $text_started=0;
+  my ($current_id, $current_from, $current_to);
 
-  if($plain_texts{$target_id}) {
+  if($plain_texts{$target_id} && (!$baseOnly || $sentence_ends{$target_id}{-1})) {
 #    print STDERR "already got $target_id\n";
-    return;
+    return 1;
   }
   while(<PLAINTEXTPIPE>) {
     if(/<raw_text[^>]+docid="([^"]*)/) {
       $docid=$1;
       $text_started=0;
+    } elsif(/<layer[^>]+docid="([^"]*)/) {
+      $docid=$1;
+      $sentence_ends{$docid}{-1}=1;
+    } elsif(m@<span @) {
+        ($current_id) = /id="[^0-9]*([^\"]*)"/;
+        ($current_from) = /from="([^\"]*)"/;
+        ($current_to) = /to="([^\"]*)"/;
+    } elsif(m@<f\s[^>]*>s</f>@) {
+      print STDERR "Found sentence end for $docid \@$current_to\n" if($debug);
+      $sentence_ends{$docid}{$current_to}=1;
     } elsif (m@<text>(.*)</text>@) {
       $_= decode("utf-8", $1, Encode::FB_DEFAULT);
       s/&lt;/</go;
