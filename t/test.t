@@ -24,10 +24,8 @@ for my $morpho_fname (glob("t/data/*\.*\.zip")) {
 }
 
 for my $base_fname (glob("t/data/*\.zip")) {
-    next if($base_fname = ~ /\..*}./); # skip tagged files like goe.tree_tagger.zip
-
     my $conllu_fname = $base_fname =~ s/(.*)\.zip/$1.conllu/r;
-    die "cannot find $conllu_fname" if (!-e $conllu_fname);
+    next if (!-e $conllu_fname);
 
     my $expected;
     open(my $fh, '<', $conllu_fname) or die "cannot open file $conllu_fname"; {
