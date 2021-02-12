@@ -1,0 +1,185 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use POSIX;
+use Getopt::Std;
+use Encode;
+use IO::Compress::Zip qw(zip $ZipError :constants);
+use File::Basename;
+
+my $_COMPRESSION_METHOD = ZIP_CM_DEFLATE;
+my %opts;
+my %processedFilenames;
+
+my $usage=<<EOF;
+Usage: $0 [options] [ZIPFILE...]
+
+Options:
+ -d        debug
+Description:
+ Converts CoNLL-U files that follow KorAP-specific comment conventions
+ and contain morphosyntactic and/or dependency annotations to
+ corresponding KorAP-XML zip files.
+
+Examples:
+ $0 zca20.spacy.conllu > zca20.spacy.zip
+
+ $0 < zca20.spacy.conllu > zca20.spacy.zip
+EOF
+
+
+getopts('hd', \%opts);
+die $usage if($opts{h});
+my $debug=($opts{d}? 1 : 0);
+
+my $docid="";
+my $zip = undef;
+my $outh = \*STDOUT;
+my $parser_file;
+my $parse;
+my $morpho_file;
+my $morpho;
+my @spansFrom;
+my @spansTo;
+my $current;
+my ($unknown, $known) = (0, 0);
+
+my ($write_morpho, $write_syntax, $base) = (1, 0, 0);
+my $filename;
+my $foundry_name;
+my $first=1;
+my @conllu_files = @ARGV;
+push @conllu_files, "-" if (@conllu_files == 0);
+my $fh;
+foreach my $conllu_file (@conllu_files) {
+  if ($conllu_file eq '-') {
+    $fh = \*STDIN;
+  } else {
+    open($fh, "<", $conllu_file) or die "Cannot open $conllu_file";
+  }
+  my $i=0; my $s=0; my $first_in_sentence=0;
+  my $lastDocSigle="";
+  while (<$fh>) {
+    if(/^(?:#|0\.1)\s+filename\s*[:=]\s*(.*)/) {
+      $filename=$1;
+      if(!$first) {
+        closeDoc(0);
+      } else {
+        $first=0;
+      }
+      if($processedFilenames{$filename}) {
+        print STDERR "WARNING: $filename is already processed\n";
+      }
+      $processedFilenames{$filename}=1;
+      $i=0;
+    } elsif(/^#\s*foundry\s*[:=]\s*(.*)/) {
+      $foundry_name=$1;
+      print STDERR "Foundry: $foundry_name\n" if($debug);
+    } elsif(/^(?:#|0\.2)\s+.*id\s*[:=]\s*(.*)/) {
+      $docid=$1;
+      my $docSigle = $docid;
+      $docSigle =~ s/\..*//;
+      if($docSigle ne $lastDocSigle) {
+        print STDERR "Analyzing $docSigle\n";
+        $lastDocSigle = $docSigle;
+      }
+      $known=$unknown=0;
+      $current="";
+      $parser_file = dirname($filename);
+      $parser_file =~ s@(.*)/[^/]+$@$1@;
+      $morpho_file = $parser_file;
+      $morpho_file .= "/$foundry_name/morpho.xml";
+      $parser_file .= "/$foundry_name/dependency.xml";
+      $parse = $morpho = layer_header($docid);
+    }  elsif (/^(?:#|0\.3)\s+(?:start_offsets|from)\s*[:=]\s*(.*)/) {
+      @spansFrom = split(/\s+/, $1);
+    }  elsif (/^(?:#|0\.4)\s+(?:end_offsets|to)\s+[:=]\s*(.*)/) {
+      @spansTo = split(/\s+/, $1);
+    } elsif (! /^\s*$/) {
+      my @parsed=split('\t');
+      chomp  $parsed[9];
+      if(@parsed != 10) {
+        print STDERR "WARNING: skipping strange parser output line in $docid\n";
+        $i++;
+        next;
+      }
+      my $t=$parsed[0];
+      if($t == 1) {
+        $s++;
+        $first_in_sentence = $i;
+      }
+      if($parsed[6] =~ /\d+/ && $parsed[7] !~ /_/) {
+        $write_syntax=1;
+        my $from=$spansFrom[$parsed[6]];
+        my $to=$spansTo[$parsed[6]];
+          $parse .= qq@<span id="s${s}_n$t" from="$spansFrom[$t]" to="$spansTo[$t]">
+<rel label="$parsed[7]">
+<span from="$from" to="$to"/>
+</rel>
+</span>
+@;
+        }
+        $morpho .= qq(  <span id="s${s}_n$t" from="$spansFrom[$t]" to="$spansTo[$t]">
+   <fs type="lex" xmlns="http://www.tei-c.org/ns/1.0">
+    <f name="lex">
+     <fs>
+      <f name="lemma">$parsed[2]</f>
+      <f name="pos">$parsed[3]</f>
+);
+      $morpho .= qq(      <f name="msd">$parsed[5]</f>\n) if($parsed[5] ne "_");
+      if($parsed[9] ne "_") {
+        if ($parsed[9] =~ /[0-9.e]+/) {
+          $morpho .= qq(      <f name="certainty">$parsed[9]</f>\n)
+        }
+        else {
+          $morpho .= qq(      <f name="misc">$parsed[9]</f>\n)
+        }
+      }
+      $morpho .= qq(     </fs>
+    </f>
+   </fs>
+  </span>
+);
+        $i++;
+    }
+  }
+  $current .= "\n";
+  closeDoc(1);
+  $zip->close();
+  close($fh);
+}
+exit;
+
+sub newZipStream {
+  my ($fname) = @_;
+  if (defined $zip) {
+    $zip->newStream(Zip64 => 1, TextFlag => 1, Method => $_COMPRESSION_METHOD,
+        Append            => 1, Name => $fname)
+        or die "ERROR ('$fname'): zip failed: $ZipError\n";
+  } else {
+    $zip = new IO::Compress::Zip $outh, Zip64 => 1, TextFlag => 1,
+        Method => $_COMPRESSION_METHOD, Append => 1, Name => "$fname"
+        or die "ERROR ('$fname'): zip failed: $ZipError\n";
+  }
+}
+
+sub closeDoc {
+  if ($write_morpho) {
+    newZipStream($morpho_file);
+    $zip->print($morpho, qq( </spanList>\n</layer>\n));
+  }
+  if ($write_syntax) {
+    $write_syntax = 0;
+    newZipStream($parser_file);
+    $zip->print($parse, qq(</spanList>\n</layer>\n));
+  }
+}
+
+sub layer_header {
+  my ($docid) = @_;
+  return(qq(<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="span.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<layer docid="$docid" xmlns="http://ids-mannheim.de/ns/KorAP" version="KorAP-0.4">
+<spanList>
+));
+}
