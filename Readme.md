@@ -4,7 +4,11 @@ Tool package to convert between KorAP XML format and [CoNLL-U format](https://un
 
 ## Description
 
-The state of the package is very preliminary. Currently, only a script `korapxml2conllu` is provided. It converts KorAP XML zip "base" and "morpho" (with POS and lemma annotations) files to corresponding CoNLL-U files with foundry information, text ids and token offsets in comments.
+The state of the package is very preliminary. Currently, two scripts are provided:
+* `korapxml2conllu` converts KorAP XML zip "base" and "morpho" (with POS and lemma annotations) files to corresponding CoNLL-U files with foundry information, text ids and token offsets in comments
+* `conllu2korapxml` converts CoNLL-U files that follow KorAP-specific comment conventions
+  and contain morphosyntactic and/or dependency annotations to
+  corresponding KorAP-XML zip files
 
 **! This software is in its early stages and not stable yet! Use it on your own risk! It is very likely to be changed or replaced.**
 ## Installation
@@ -17,7 +21,7 @@ make test TEST_VERBOSE=1
 ```
 
 ## Command Line Invocation
-
+### `korapxml2conllu`
 ```
 
 $ korapxml2conllu wpd17.tree_tagger.zip | head -42
@@ -88,6 +92,10 @@ $ ./script/korapxml2conllu t/data/goe.zip | head -20
 4	der	_	_	_	_	_	_	_	_
 5	Champagne	_	_	_	_	_	_	_	_
 
+```
+### `conllu2korapxml`
+```
+./script/conllu2korapxml < t/data/goe.morpho.conllu > goe.morpho.zip
 ```
 
 ## Development and License
