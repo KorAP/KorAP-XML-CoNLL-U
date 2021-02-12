@@ -12,7 +12,7 @@ The state of the package is very preliminary. Currently, only a script `korapxml
 ```shell script
 perl Makefile.PL
 make
-make test
+make test TEST_VERBOSE=1
 # make install
 ```
 

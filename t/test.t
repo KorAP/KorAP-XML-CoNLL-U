@@ -19,7 +19,7 @@ for my $morpho_fname (glob("t/data/*\.*\.zip")) {
         $expected = <$fh>;
     }
     close($fh);
-    script_runs([ 'script/korapxml2conllu', $morpho_fname ], "Runs with input");
+    script_runs([ 'script/korapxml2conllu', $morpho_fname ], "Runs korapxml2conllu with pos and lemma annotated input");
     script_stdout_is $expected, "Converts $morpho_fname correctly";
 }
 
@@ -33,8 +33,8 @@ for my $base_fname (glob("t/data/*\.zip")) {
         $expected = <$fh>;
     }
     close($fh);
-    script_runs([ 'script/korapxml2conllu', $base_fname ], "Runs with input");
-    script_stdout_is $expected, "Converts $base_fname correctly";
+    script_runs([ 'script/korapxml2conllu', $base_fname ], "Runs korapxml2conllu with base input");
+    script_stdout_is $expected, "Converts $base_fname correctly to CoNLL-U";
 }
 
 done_testing;
