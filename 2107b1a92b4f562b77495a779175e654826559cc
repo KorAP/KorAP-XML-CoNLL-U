@@ -22,6 +22,30 @@
       "revId": "2107b1a92b4f562b77495a779175e654826559cc",
       "serverId": "626241b7-b7d0-4197-b843-1ee23887649c",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ae52c1e_672d7910",
+        "filename": "t/test.t",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2021-02-12T14:41:18Z",
+      "side": 1,
+      "message": "right, the curly close brace should be a backslash",
+      "parentUuid": "b82906f8_a8dc1f51",
+      "range": {
+        "startLine": 27,
+        "startChar": 4,
+        "endLine": 27,
+        "endChar": 83
+      },
+      "revId": "2107b1a92b4f562b77495a779175e654826559cc",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c",
+      "unresolved": true
     }
   ]
 }
