@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b82906f8_a8dc1f51",
+        "filename": "t/test.t",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2021-02-12T14:36:52Z",
+      "side": 1,
+      "message": "This lines always skips, so this for loop never tests anything, as far as I can see.",
+      "range": {
+        "startLine": 27,
+        "startChar": 4,
+        "endLine": 27,
+        "endChar": 83
+      },
+      "revId": "2107b1a92b4f562b77495a779175e654826559cc",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c",
+      "unresolved": true
+    }
+  ]
+}
