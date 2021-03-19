@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "52e9131b_a2579c6b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2021-03-19T15:40:45Z",
+      "side": 1,
+      "message": "@Harald: You can already test if this on klinux10:\n\n/opt/perl/perlbrew/perls/perl-5.24.0/bin/korapxml2conllu -h\n\nIs it OK like this or better like this:\n\n # element/@attribute \u003d value\n\nOr do we need closing tags in addition (sigh). Maybe we should also look for CoNLL-U conventions...\nI haven\u0027t done this yet. ",
+      "revId": "3760d22004b2b9e490118a496ea007e378746538",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
