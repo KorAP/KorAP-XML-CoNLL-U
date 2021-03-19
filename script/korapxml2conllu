@@ -28,6 +28,7 @@ use constant {
 
 GetOptions(
   'sigle-pattern|p=s'            => \(my $sigle_pattern = ''),
+  'extract-attributes-regex|e=s' => \(my $extract_attributes_regex = ''),
   'log|l=s'                      => \(my $log_level = 'warn'),
 
   'help|h'                       => sub {
@@ -47,14 +48,6 @@ GetOptions(
   }
 );
 
- ZIPSIGLEPATTERN='-x "*15/FEB*" "*15/MAR*"' $0 /vol/corpora/DeReKo/current/KorAP/zip/zca15.tree_tagger.zip
-
- Results will be written to stdout
-EOF
-
-getopts('dhp:', \%opts);
-die $usage if($opts{h} || @ARGV == 0);
-my $debug=($opts{d}? 1 : 0);
 # Establish logger
 binmode(STDERR, ':encoding(UTF-8)');
 Log::Any::Adapter->set('Stderr', log_level => $log_level);
@@ -68,6 +61,7 @@ my @current_lines;
 my %processedFilenames;
 my $zipsiglepattern = (defined($ENV{ZIPSIGLEPATTERN})? $ENV{ZIPSIGLEPATTERN} : "");
 my $baseOnly;
+my %extras;
 
 my ($ID_idx, $FORM_idx, $LEMMA_idx, $UPOS_idx, $XPOS_idx, $FEATS_idx, $HEAD_idx, $DEPREC_idx, $DEPS_idx, $MISC_idx) = (0..9);
 
@@ -96,19 +90,22 @@ foreach my $morpho_zip (@ARGV) {
   die "cannot open data file $data_zip corresponding to $morpho_zip" if(! -r $data_zip);
   
   my $first=1;
-  my $pattern = (defined($opts{p})? $opts{p} : '');
   my @conll = ("_") x 10;
   my $filename;
 
   $baseOnly = $morpho_zip eq $data_zip;
   my ($morphoOrTokenCommand, $plaintextAndStructureCommand);
-  if(!$baseOnly) {
-    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${pattern}*/*/*/morpho.xml' $zipsiglepattern |";
-    $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${pattern}*/*/data.xml' $zipsiglepattern |";
+  if (!$baseOnly) {
+    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${sigle_pattern}*/*/*/morpho.xml' $zipsiglepattern |";
+    if ($extract_attributes_regex) {
+      $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/[sd][ta]*.xml' $zipsiglepattern |";
+    } else {
+      $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/data.xml' $zipsiglepattern |";
+    }
   } else {
     $foundry = "base";
-    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${pattern}*/*/*/tokens.xml' $zipsiglepattern |";
-    $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${pattern}*/*/[sd][ta]*.xml' $zipsiglepattern |";
+    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${sigle_pattern}*/*/*/tokens.xml' $zipsiglepattern |";
+    $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/[sd][ta]*.xml' $zipsiglepattern |";
   }
 
   open (MORPHO_OR_TOKENPIPE, $morphoOrTokenCommand) or die "cannot unzip $morpho_zip";
@@ -163,9 +160,18 @@ foreach my $morpho_zip (@ARGV) {
         $conll[$MISC_idx] = $2;
       }
     } elsif (/<span /) {
+      my $last_from = $current_from // -1;
       ($current_id) = /id="[^0-9]*([^\"]*)"/;
       ($current_from) = /from="([^\"]*)"/;
       ($current_to) = /to="([^\"]*)"/;
+      if($extract_attributes_regex) {
+        for (my $i = $last_from + 1; $i <= $current_from; $i++) {
+          if ($extras{$docid}{$i}) {
+            $current .= $extras{$docid}{$i};
+            undef $extras{$docid}{$i};
+          }
+        }
+      }
       $log->debug("found span: $current_id $current_from $current_to");
       $token = substr($plain_texts{$docid}, $current_from, $current_to - $current_from);
       if (!defined $token) {
@@ -251,6 +257,7 @@ sub fetch_plaintext {
   my ($target_id) = @_;
   my $docid;
   my $text_started=0;
+  my $text_count = 0;
   my ($current_id, $current_from, $current_to);
 
   if($plain_texts{$target_id} && (!$baseOnly || $sentence_ends{$target_id}{-1})) {
@@ -271,6 +278,19 @@ sub fetch_plaintext {
     } elsif(m@<f\s[^>]*>s</f>@) {
       $log->debug("Found sentence end for $docid \@$current_to");
       $sentence_ends{$docid}{$current_to}=1;
+    } elsif($extract_attributes_regex && m@<f\sname="name"[^>]*>([^<]+)</f>@) {
+      my $current_element = $1;
+      while(<PLAINTEXTPIPE>) {
+        last if(m@</fs>@);
+        if(m@<f\sname="([^"]+)"[^>]*>([^<]+)</f>@) {
+          my $current_node = "$current_element/$1";
+          my $value = $2;
+          if ($current_node =~ /$extract_attributes_regex/) {
+#            print "# $docid $current_from-$current_to :: $current_node = $value\n";
+            $extras{$docid}{$current_from} .= "# $current_node = $value\n";
+          }
+        }
+      }
     } elsif (m@<text>(.*)</text>@) {
       $_= decode("utf-8", $1, Encode::FB_DEFAULT);
       s/&lt;/</go;
@@ -278,7 +298,7 @@ sub fetch_plaintext {
       s/&amp;/&/go;
       tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
       $plain_texts{$docid} = $_;
-      last if($docid eq $target_id);
+      last if($text_count++ > 1 && $plain_texts{$target_id});
     } elsif (m@<text>(.*)@) {
       $_= decode("utf-8", $1, Encode::FB_DEFAULT);
       s/&lt;/</go;
@@ -295,7 +315,7 @@ sub fetch_plaintext {
       tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
       $plain_texts{$docid} .= $_;
       $text_started=0;
-      last if($docid eq $target_id);
+      last if($text_count++ > 1 && $plain_texts{$target_id});
     } elsif ($text_started) {
       chomp;
       $_ = decode("utf-8", $_, Encode::FB_DEFAULT) . ' ';
@@ -346,6 +366,11 @@ C<korapxml2conllu> is a script to Convert L<KorAP-XML format|https://github.com/
 =item B<--sigle-pattern|-p>
 
 Convert only texts from the KorAP XML zip files with folder names (i.e. sigles) matching the glob pattern.
+
+=item B<--extract-attribute-pattern|-e>
+
+Extract element/attribute regular expressions to comments.
+
 =item B<--help|-h>
 
 Print help information.
@@ -362,6 +387,9 @@ Loglevel for I<Log::Any>. Defaults to C<warn>.
 =back
 
 =head1 EXAMPLES
+
+ korapxml2conllu -e '(posting/id|div/id)' t/data/wdf19.zip
+
 =head1 COPYRIGHT AND LICENSE
 
 Copyright (C) 2021, L<IDS Mannheim|https://www.ids-mannheim.de/>
