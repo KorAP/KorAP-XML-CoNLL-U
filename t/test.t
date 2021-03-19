@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 19;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -75,4 +75,15 @@ copy("t/data/goe.zip", $test_tempdir);
 script_runs([ 'script/korapxml2conllu', "$test_tempdir/goe.tree_tagger.zip" ],
     "Converts $test_tempdir/goe.tree_tagger.zip to CoNLL-U");
 script_stdout_is $expected, "Full round trip: Converts goe.morpho.conllu to KorAP-XML and back to CoNLL-U correctly";
+
+script_runs([ 'script/korapxml2conllu', '-e',  'div/type', "t/data/goe.tree_tagger.zip" ], "Runs korapxml2conllu with morpho input and attribute extraction");
+script_stdout_like "\n# div/type = Autobiographie\n", "Extracts attributes from morpho zips";
+script_stdout_like "\n# div/type = section\n", "Extracts attributes from morpho zips";
+
+script_runs([ 'script/korapxml2conllu', '-e',  '(posting/id|div/id)', "t/data/wdf19.zip" ], "Runs korapxml2conllu with base input and regex attribute extraction");
+script_stdout_like "\n# posting/id = i.13075_11_45", "Extracts multiple attributes from base zips (1)";
+script_stdout_like "\n# div/id = i.13075_14", "Extracts multiple attributes from base zips (2)";
+script_stdout_like "\n# posting/id = i.14548_9_1\n3\tbonjour", "Extracts attributes in the right place";
+script_stdout_like "\n# posting/id = i.12610_4_4", "Extracts directly adjacent postings from base zips (1)";
+script_stdout_like "\n# posting/id = i.12610_4_5", "Extracts directly adjacent postings from base zips (2)";
 done_testing;
