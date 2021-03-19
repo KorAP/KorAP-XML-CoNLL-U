@@ -16,9 +16,11 @@ my %sentence_ends;
 
 my $usage=<<EOF;
 Usage: $0 [options] ZIPFILE [ZIPFILE...]
+our $VERSION = '0.3.900';
 
 Options:
  -p pattern
+our $VERSION_MSG = "\nkorapxml2conllu - v$VERSION\n";
 
 Description:
  Convert KorAP-XML base or morpho zips to CoNLL(-U) format with all information necessary

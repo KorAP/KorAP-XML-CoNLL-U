@@ -104,7 +104,7 @@ $ ./script/korapxml2conllu t/data/goe.zip | head -20
 
 * [Marc Kupietz](https://www1.ids-mannheim.de/digspra/personal/kupietz.html)
 
-Copyright (c) 2020, [Leibniz Institute for the German Language](http://www.ids-mannheim.de/), Mannheim, Germany
+Copyright (c) 2021, [Leibniz Institute for the German Language](http://www.ids-mannheim.de/), Mannheim, Germany
 
 This package is developed as part of the [KorAP](http://korap.ids-mannheim.de/)
 Corpus Analysis Platform at the Leibniz Institute for German Language

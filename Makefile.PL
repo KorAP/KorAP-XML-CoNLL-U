@@ -8,7 +8,7 @@ WriteMakefile(
     NAME             => 'korapxml2conllu',
     AUTHOR           => 'Marc Kupietz',
     ABSTRACT         => 'Conversion between KorAP-XML zip and CoNLL-U',
-    VERSION          => '0.3',
+    VERSION_FROM     => 'script/korapxml2conllu',
     LICENSE          => 'freebsd',
     BUILD_REQUIRES   => {
         'Test::More'          => "1.302177",
