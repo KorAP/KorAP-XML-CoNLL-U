@@ -5,8 +5,8 @@ use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
 
-script_runs([ 'script/korapxml2conllu', '-h' ], { exit => 255 });
-script_stderr_like "Description", "Can print help message";
+script_runs([ 'script/korapxml2conllu', '-h' ], { exit => 1 });
+script_stdout_like "Description", "Can print help message";
 
 for my $morpho_fname (glob("t/data/*\.*\.zip")) {
     my $base_fname = $morpho_fname =~ s/(.*)\..*\.zip/$1.zip/r;

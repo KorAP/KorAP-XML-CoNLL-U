@@ -2,7 +2,10 @@
 use strict;
 use warnings;
 use POSIX;
-use Getopt::Std;
+use Log::Any '$log';
+use Log::Any::Adapter;
+use Pod::Usage;
+use Getopt::Long qw(GetOptions :config no_auto_abbrev);
 use Encode;
 
 my $MAX_SENTENCE_LENGTH=10000;
@@ -14,22 +17,35 @@ my %opts;
 my %plain_texts;
 my %sentence_ends;
 
-my $usage=<<EOF;
-Usage: $0 [options] ZIPFILE [ZIPFILE...]
 our $VERSION = '0.3.900';
 
-Options:
- -p pattern
 our $VERSION_MSG = "\nkorapxml2conllu - v$VERSION\n";
 
-Description:
- Convert KorAP-XML base or morpho zips to CoNLL(-U) format with all information necessary
- for reconstruction in comment lines.
+use constant {
+  # Set to 1 for minimal more debug output (no need to be parametrized)
+  DEBUG => $ENV{KORAPXMLCONLLU_DEBUG} // 0
+};
 
-Examples:
- $0 /vol/corpora/DeReKo/current/KorAP/zip/zca20.zip
+GetOptions(
+  'sigle-pattern|p=s'            => \(my $sigle_pattern = ''),
+  'log|l=s'                      => \(my $log_level = 'warn'),
 
- $0 /vol/corpora/DeReKo/current/KorAP/zip/zca15.tree_tagger.zip
+  'help|h'                       => sub {
+    pod2usage(
+      -verbose  => 99,
+      -sections => 'NAME|DESCRIPTION|SYNOPSIS|ARGUMENTS|OPTIONS|EXAMPLES',
+      -msg      => $VERSION_MSG,
+      -output   => '-'
+    )
+  },
+  'version|v'                    => sub {
+    pod2usage(
+      -verbose => 0,
+      -msg     => $VERSION_MSG,
+      -output  => '-'
+    );
+  }
+);
 
  ZIPSIGLEPATTERN='-x "*15/FEB*" "*15/MAR*"' $0 /vol/corpora/DeReKo/current/KorAP/zip/zca15.tree_tagger.zip
 
@@ -39,6 +55,10 @@ EOF
 getopts('dhp:', \%opts);
 die $usage if($opts{h} || @ARGV == 0);
 my $debug=($opts{d}? 1 : 0);
+# Establish logger
+binmode(STDERR, ':encoding(UTF-8)');
+Log::Any::Adapter->set('Stderr', log_level => $log_level);
+$log->notice('Debugging is activated') if DEBUG;
 
 my $docid="";
 my ($current_id, $current_from, $current_to, $token);
@@ -98,7 +118,7 @@ foreach my $morpho_zip (@ARGV) {
     if (/^  inflating: (.*)/) {
       $filename=$1;
       while($processedFilenames{$filename} && !eof(MORPHO_OR_TOKENPIPE)) {
-        print STDERR "WARNING: $filename already processed\n";
+        $log->warn("$filename already processed");
         while (<MORPHO_OR_TOKENPIPE>) {
           last if(/\s+inflating:\s+(.*)/);
         }
@@ -123,7 +143,7 @@ foreach my $morpho_zip (@ARGV) {
         }
       }
       print STDOUT "$COMMENT_START filename = $filename\n$COMMENT_START text_id = $docid\n";
-      print STDERR "Analyzing $docid\n" if ($debug);
+      $log->debug("Analyzing $docid");
     } elsif (m@^\s*<f\s+.*name="([^"]+)">([^<]+)</f>@) {
       if ($1 eq "lemma") {
         $conll[$LEMMA_idx] = $2;
@@ -146,10 +166,10 @@ foreach my $morpho_zip (@ARGV) {
       ($current_id) = /id="[^0-9]*([^\"]*)"/;
       ($current_from) = /from="([^\"]*)"/;
       ($current_to) = /to="([^\"]*)"/;
-      print STDERR "found span: $current_id $current_from $current_to\n" if($debug);
+      $log->debug("found span: $current_id $current_from $current_to");
       $token = substr($plain_texts{$docid}, $current_from, $current_to - $current_from);
       if (!defined $token) {
-        print STDERR "WARNING: could not retrieve token for $docid at $current_from-$current_to/", length($plain_texts{$docid}), " - ending with: ", substr($plain_texts{$docid},length($plain_texts{$docid})-10), "\n";
+        $log->warn("could not retrieve token for $docid at $current_from-$current_to/", length($plain_texts{$docid}), " - ending with: ", substr($plain_texts{$docid},length($plain_texts{$docid})-10));
         $token = "_";
       }
       $token=~s/[\t\n\r]//g; # make sure that tokens never contain tabs or newlines
@@ -157,7 +177,7 @@ foreach my $morpho_zip (@ARGV) {
       $conll[$FORM_idx] = encode("utf-8", $token);
       if($baseOnly) {
         my @vals = ($current_from, $current_to);
-        print STDERR "joining : ", join(" ", @vals), "\n" if($debug);
+        $log->debug("joining : ", join(" ", @vals));
         push @current_lines, \@vals;
         $known++;
         $conll[$ID_idx] = $#current_lines+1;
@@ -175,7 +195,7 @@ foreach my $morpho_zip (@ARGV) {
       }
     } elsif (m@^\s*</fs>@) {
       my @vals = ($current_from, $current_to);
-      print STDERR "joining : ", join(" ", @vals), "\n" if($debug);
+      $log->debug("joining : ", join(" ", @vals));
       push @current_lines, \@vals;
       # convert gathered information to CONLL
       $conll[$ID_idx] = $#current_lines+1;
@@ -214,7 +234,7 @@ sub printTokenRanges {
 }
 
 sub closeDoc {
-  print STDERR "closing doc\n" if($debug);
+  $log->debug("closing doc");
   if($known + $unknown > 0) { # only parse a sentence if it has some words
     chomp $current;
     chomp $current;
@@ -249,7 +269,7 @@ sub fetch_plaintext {
         ($current_from) = /from="([^\"]*)"/;
         ($current_to) = /to="([^\"]*)"/;
     } elsif(m@<f\s[^>]*>s</f>@) {
-      print STDERR "Found sentence end for $docid \@$current_to\n" if($debug);
+      $log->debug("Found sentence end for $docid \@$current_to");
       $sentence_ends{$docid}{$current_to}=1;
     } elsif (m@<text>(.*)</text>@) {
       $_= decode("utf-8", $1, Encode::FB_DEFAULT);
@@ -289,11 +309,72 @@ sub fetch_plaintext {
   if(defined($ENV{PLAINTEXTFILTER})) {
     if ($plain_texts{$docid} !~ $ENV{PLAINTEXTFILTER}) {
       $plain_texts{$docid} = undef;
-      print STDERR "Skipping $docid\n";
+      $log->info("Skipping $docid");
       return(undef);
     } else {
-      print STDERR "Using $docid\n";
+      $log->debug("Using $docid");
     }
   } 
   return(1);
 }
+
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+korapxml2conllu - Conversion of KorAP-XML zips to CoNLL-U
+
+=head1 SYNOPSIS
+
+  korapxml2conllu zca15.tree_tagger.zip > zca15.conllu
+
+=head1 DESCRIPTION
+
+C<korapxml2conllu> is a script to Convert L<KorAP-XML format|https://github.com/KorAP/KorAP-XML-Krill#about-korap-xml> base or morpho zips to CoNLL(-U) format with all information necessary
+ for reconstruction in comment lines.
+
+=head1 INSTALLATION
+
+  $ cpanm https://github.com/KorAP/KorAP-XML-CoNLL-U.git
+
+=head1 OPTIONS
+
+=over 2
+
+=item B<--sigle-pattern|-p>
+
+Convert only texts from the KorAP XML zip files with folder names (i.e. sigles) matching the glob pattern.
+=item B<--help|-h>
+
+Print help information.
+
+=item B<--version|-v>
+
+Print version information.
+
+
+=item B<--log|-l>
+
+Loglevel for I<Log::Any>. Defaults to C<warn>.
+
+=back
+
+=head1 EXAMPLES
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2021, L<IDS Mannheim|https://www.ids-mannheim.de/>
+
+Author: Marc Kupietz
+
+Contributors: Nils Diewald
+
+L<KorAP::XML::CoNNL-U> is developed as part of the L<KorAP|https://korap.ids-mannheim.de/>
+Corpus Analysis Platform at the
+L<Leibniz Institute for the German Language (IDS)|http://ids-mannheim.de/>,
+member of the
+L<Leibniz-Gemeinschaft|http://www.leibniz-gemeinschaft.de/>.
+
+This program is free software published under the
+L<BSD-2 License|https://opensource.org/licenses/BSD-2-Clause>.

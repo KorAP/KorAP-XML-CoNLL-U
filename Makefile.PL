@@ -15,11 +15,14 @@ WriteMakefile(
         'Test::Script'        => "1.12",
         'Test::TempDir::Tiny' => 0,
         'File::Temp'          => 0.2308,
+        'Pod::Usage'          => 0,
         'IO::Compress::Zip'   => '2.091',
     },
     PREREQ_PM        => {
         'POSIX'             => 0,
         'Getopt::Std'       => 0,
+        'Getopt::Long'      => 0,
+        'Log::Any'          => '1.708',
         'Encode'            => "3.07",
         'IO::Compress::Zip' => '2.091'
     },
