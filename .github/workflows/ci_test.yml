@@ -16,11 +16,28 @@ jobs:
     name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
+
       - name: Setup Perl environment
+        if: ${{ startsWith( matrix.runner, 'windows-' )  }}
+        uses: shogo82148/actions-setup-perl@v12.2
+        with:
+          perl-version: ${{ matrix.perl }}
+          distribution: strawberry
+
+      - name: Setup Perl environment
+        if: ${{ startsWith( matrix.runner, 'macos-' )  }}
         uses: shogo82148/actions-setup-perl@v1.12.2
         with:
           perl-version: ${{ matrix.perl }}
+
+      - name: Setup Perl environment
+        if: ${{ startsWith( matrix.runner, 'ubuntu-' )  }}
+        uses: shogo82148/actions-setup-perl@v1.12.2
+        with:
+          perl-version: ${{ matrix.perl }}
+
       - run: perl -V
+
       - name: Install dependencies
         run: |
           cpanm --installdeps .
