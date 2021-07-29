@@ -1,4 +1,4 @@
-0.3.900 unreleased
+0.4 2021-07-29
         - korapxml2conllu option -e <regex> added to extract element/attributes to comments
 
 0.3 2021-02-15
