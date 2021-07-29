@@ -29,6 +29,7 @@ nytprof
 *.cache
 .*
 !.gitignore
+!.github
 
 # Protected checks
 t/corpus/BRZ13
