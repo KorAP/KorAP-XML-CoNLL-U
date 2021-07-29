@@ -102,7 +102,7 @@ $ ./script/korapxml2conllu t/data/goe.zip | head -20
 
 **Author**:
 
-* [Marc Kupietz](https://www1.ids-mannheim.de/digspra/personal/kupietz.html)
+* [Marc Kupietz](https://www.ids-mannheim.de/digspra/personal/kupietz.html)
 
 Copyright (c) 2021, [Leibniz Institute for the German Language](http://www.ids-mannheim.de/), Mannheim, Germany
 
