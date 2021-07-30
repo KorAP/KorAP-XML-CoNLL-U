@@ -100,9 +100,10 @@ $ ./script/korapxml2conllu t/data/goe.zip | head -20
 
 ## Development and License
 
-**Author**:
+**Authors**:
 
 * [Marc Kupietz](https://www.ids-mannheim.de/digspra/personal/kupietz.html)
+* [Nils Diewald](https://www.ids-mannheim.de/digspra/personal/diewald.html)
 
 Copyright (c) 2021, [Leibniz Institute for the German Language](http://www.ids-mannheim.de/), Mannheim, Germany
 
