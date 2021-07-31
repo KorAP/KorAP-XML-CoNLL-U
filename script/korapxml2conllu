@@ -172,7 +172,7 @@ foreach my $morpho_zip (@ARGV) {
           }
         }
       }
-      $log->debug("found span: $current_id $current_from $current_to");
+#      $log->debug("found span: $current_id $current_from $current_to");
       $token = substr($plain_texts{$docid}, $current_from, $current_to - $current_from);
       if (!defined $token) {
         $log->warn("could not retrieve token for $docid at $current_from-$current_to/", length($plain_texts{$docid}), " - ending with: ", substr($plain_texts{$docid},length($plain_texts{$docid})-10));
@@ -183,7 +183,7 @@ foreach my $morpho_zip (@ARGV) {
       $conll[$FORM_idx] = encode("utf-8", $token);
       if($baseOnly) {
         my @vals = ($current_from, $current_to);
-        $log->debug("joining : ", join(" ", @vals));
+#        $log->debug("joining : ", join(" ", @vals));
         push @current_lines, \@vals;
         $known++;
         $conll[$ID_idx] = $#current_lines+1;
@@ -201,7 +201,7 @@ foreach my $morpho_zip (@ARGV) {
       }
     } elsif (m@^\s*</fs>@) {
       my @vals = ($current_from, $current_to);
-      $log->debug("joining : ", join(" ", @vals));
+#      $log->debug("joining : ", join(" ", @vals));
       push @current_lines, \@vals;
       # convert gathered information to CONLL
       $conll[$ID_idx] = $#current_lines+1;
@@ -262,11 +262,13 @@ sub fetch_plaintext {
 
   if($plain_texts{$target_id} && (!$baseOnly || $sentence_ends{$target_id}{-1})) {
 #    print STDERR "already got $target_id\n";
+    $log->debug("Already got $target_id");
     return 1;
   }
   while(<PLAINTEXTPIPE>) {
     if(/<raw_text[^>]+docid="([^"]*)/) {
       $docid=$1;
+      $log->debug("Getting plain text for $docid");
       $text_started=0;
     } elsif(/<layer[^>]+docid="([^"]*)/) {
       $docid=$1;
@@ -280,13 +282,14 @@ sub fetch_plaintext {
       $sentence_ends{$docid}{$current_to}=1;
     } elsif($extract_attributes_regex && m@<f\sname="name"[^>]*>([^<]+)</f>@) {
       my $current_element = $1;
+      $log->debug("Looking for matching attributes in $docid");
       while(<PLAINTEXTPIPE>) {
         last if(m@</fs>@);
         if(m@<f\sname="([^"]+)"[^>]*>([^<]+)</f>@) {
           my $current_node = "$current_element/$1";
           my $value = $2;
           if ($current_node =~ /$extract_attributes_regex/) {
-#            print "# $docid $current_from-$current_to :: $current_node = $value\n";
+            $log->debug("Found matching attribute: $docid - $current_node = $value");
             $extras{$docid}{$current_from} .= "# $current_node = $value\n";
           }
         }
@@ -326,6 +329,7 @@ sub fetch_plaintext {
       $plain_texts{$docid} .= $_;
     }
   }
+  $log->debug("Got plain text for $docid");
   if(defined($ENV{PLAINTEXTFILTER})) {
     if ($plain_texts{$docid} !~ $ENV{PLAINTEXTFILTER}) {
       $plain_texts{$docid} = undef;
