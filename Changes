@@ -1,3 +1,6 @@
+0.4.1 2021-07-31
+        - korapxml2conllu: fix patterns not extracted for last texts in archive
+
 0.4 2021-07-29
         - korapxml2conllu option -e <regex> added to extract element/attributes to comments
 
