@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 19;
+use Test::More tests => 28;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -86,4 +86,13 @@ script_stdout_like "\n# div/id = i.13075_14", "Extracts multiple attributes from
 script_stdout_like "\n# posting/id = i.14548_9_1\n3\tbonjour", "Extracts attributes in the right place";
 script_stdout_like "\n# posting/id = i.12610_4_4", "Extracts directly adjacent postings from base zips (1)";
 script_stdout_like "\n# posting/id = i.12610_4_5", "Extracts directly adjacent postings from base zips (2)";
+script_stdout_like "\n# posting/id = i.14548_9_1", "Extracts last postings in base zip";
+
+script_runs([ 'script/korapxml2conllu', '-e',  '(posting/id|div/id)', "t/data/wdf19.tree_tagger.zip" ], "Runs korapxml2conllu with morpho input and regex attribute extraction");
+script_stdout_like "\n# posting/id = i.13075_11_45", "Extracts multiple attributes from morpho zips (1)";
+script_stdout_like "\n# div/id = i.13075_14", "Extracts multiple attributes from morpho zips (2)";
+script_stdout_like "\n# posting/id = i.12610_4_4", "Extracts directly adjacent postings from morpho zips (1)";
+script_stdout_like "\n# posting/id = i.12610_4_5", "Extracts directly adjacent postings from morpho zips (2)";
+script_stdout_like "\n# posting/id = i.14548_9_1", "Extracts last postings in morpho zip";
+
 done_testing;
