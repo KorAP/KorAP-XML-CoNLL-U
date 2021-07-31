@@ -301,7 +301,7 @@ sub fetch_plaintext {
       s/&amp;/&/go;
       tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
       $plain_texts{$docid} = $_;
-      last if($text_count++ > 1 && $plain_texts{$target_id});
+      last if(!$extract_attributes_regex && ($text_count++ > 1 && $plain_texts{$target_id}));
     } elsif (m@<text>(.*)@) {
       $_= decode("utf-8", $1, Encode::FB_DEFAULT);
       s/&lt;/</go;
@@ -318,7 +318,7 @@ sub fetch_plaintext {
       tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
       $plain_texts{$docid} .= $_;
       $text_started=0;
-      last if($text_count++ > 1 && $plain_texts{$target_id});
+      last if(!$extract_attributes_regex && ($text_count++ > 1 && $plain_texts{$target_id}));
     } elsif ($text_started) {
       chomp;
       $_ = decode("utf-8", $_, Encode::FB_DEFAULT) . ' ';
