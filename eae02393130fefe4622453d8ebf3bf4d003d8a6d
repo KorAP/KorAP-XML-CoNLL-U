@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e50ab698_c89410b0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2021-08-02T10:32:59Z",
+      "side": 1,
+      "message": "I think I am less an author and more of a contributor here. ;-)",
+      "revId": "eae02393130fefe4622453d8ebf3bf4d003d8a6d",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
