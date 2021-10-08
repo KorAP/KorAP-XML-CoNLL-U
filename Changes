@@ -1,3 +1,5 @@
+        - korapxml2conllu: use morpho.xml if present when run on base zips
+
 0.4.1 2021-07-31
         - korapxml2conllu: fix patterns not extracted for last texts in archive
 
