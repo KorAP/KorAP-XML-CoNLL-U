@@ -104,7 +104,14 @@ foreach my $morpho_zip (@ARGV) {
     }
   } else {
     $foundry = "base";
-    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${sigle_pattern}*/*/*/tokens.xml' $zipsiglepattern |";
+    $morphoOrTokenCommand = "$UNZIP -l $morpho_zip '*/${sigle_pattern}*/*/*/morpho.xml' $zipsiglepattern";
+    if (`$morphoOrTokenCommand` !~ /morpho\.xml/) {
+      $morphoOrTokenCommand =~ s/morpho\.xml/tokens.xml/;
+    } else {
+      $baseOnly = 0;
+    }
+    $morphoOrTokenCommand =~ s/-l/-c/;
+    $morphoOrTokenCommand .= ' |';
     $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/[sd][ta]*.xml' $zipsiglepattern |";
   }
 
