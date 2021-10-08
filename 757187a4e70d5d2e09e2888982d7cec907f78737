@@ -16,6 +16,24 @@
       "message": "Maybe add a test",
       "revId": "757187a4e70d5d2e09e2888982d7cec907f78737",
       "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "94d0bd2b_b89dc075",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2021-10-08T15:20:51Z",
+      "side": 1,
+      "message": "No free test data at hand.",
+      "parentUuid": "1eec4d9d_a9449878",
+      "revId": "757187a4e70d5d2e09e2888982d7cec907f78737",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
     }
   ]
 }
