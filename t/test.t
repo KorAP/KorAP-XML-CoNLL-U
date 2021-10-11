@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 30;
+use Test::More tests => 33;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -105,4 +105,20 @@ script_stdout_like "\n# posting/id = i.12610_4_4", "Extracts directly adjacent p
 script_stdout_like "\n# posting/id = i.12610_4_5", "Extracts directly adjacent postings from morpho zips (2)";
 script_stdout_like "\n# posting/id = i.14548_9_1", "Extracts last postings in morpho zip";
 
+$zipfile = "$test_tempdir/without_lemma.zip";
+script_runs([ 'script/conllu2korapxml', "t/data/without_lemma.tsv" ], {stdout => \$zipcontent},
+    "Converts t/data/without_lemma.tsv to KorAP-XML zip");
+open($fh, ">", $zipfile) or fail("cannot open file $zipfile for writing");
+print $fh $zipcontent;
+close($fh);
+my $UNZIP = `sh -c 'command -v unzip'`;
+chomp $UNZIP;
+
+if ($UNZIP eq '') {
+    warn('No unzip executable found in PATH.');
+    return 0;
+};
+$zipcontent = `$UNZIP -c $zipfile`;
+unlike($zipcontent, qr/.*name ="lemma".*/, "conllu2korapxml igores _ lemmas.");
+like($zipcontent, qr/.*<f name="pos">NN|NN<\/f>.*/, "conllu2korapxml does not ignore pos for _ lemmas.");
 done_testing;
