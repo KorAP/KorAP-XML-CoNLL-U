@@ -17,7 +17,7 @@ my %opts;
 my %plain_texts;
 my %sentence_ends;
 
-our $VERSION = '0.4.1';
+our $VERSION = '0.4.1.9000';
 
 our $VERSION_MSG = "\nkorapxml2conllu - v$VERSION\n";
 

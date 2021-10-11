@@ -13,6 +13,7 @@ my %processedFilenames;
 
 my $usage=<<EOF;
 Usage: $0 [options] [CoNLL-U-FILE...]
+our $VERSION = '0.4.1.9000';
 
 Options:
  -d        debug
