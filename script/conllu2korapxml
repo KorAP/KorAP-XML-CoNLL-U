@@ -11,6 +11,8 @@ my $_COMPRESSION_METHOD = ZIP_CM_DEFLATE;
 my %opts;
 my %processedFilenames;
 
+our $VERSION = '0.4.1.9000';
+
 my $usage=<<EOF;
 Usage: $0 [options] [CoNLL-U-FILE...]
 
