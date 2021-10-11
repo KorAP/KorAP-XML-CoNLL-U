@@ -1,3 +1,4 @@
+        - by default sentence boundary information is now read from structure.xml files (use --s-bounds-from-morpho otherwise)
         - korapxml2conllu: use morpho.xml if present when run on base zips
 
 0.4.1 2021-07-31

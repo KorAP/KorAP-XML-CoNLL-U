@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 28;
+use Test::More tests => 32;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -31,6 +31,32 @@ for my $morpho_fname (glob("t/data/*\.*\.zip")) {
         next;
     }
     script_runs([ 'script/korapxml2conllu', $morpho_fname ], "Runs korapxml2conllu with pos and lemma annotated input");
+    script_stdout_is $expected, "Converts $morpho_fname correctly";
+}
+
+for my $morpho_fname (glob("t/data/*\.*\.zip")) {
+    my $base_fname = $morpho_fname =~ s/(.*)\..*\.zip/$1.zip/r;
+    if (!-e $base_fname) {
+        fail("cannot find $base_fname");
+        next;
+    };
+
+    my $conllu_fname = $base_fname =~ s/(.*)\.zip/$1.morpho.sbfm.conllu/r;
+    if (!-e $conllu_fname) {
+        fail("cannot find $conllu_fname");
+        next;
+    };
+
+    my $expected;
+    if (open(my $fh, '<', $conllu_fname)) {
+        local $/;
+        $expected = <$fh>;
+        close($fh);
+    } else {
+        fail("cannot open file $conllu_fname");
+        next;
+    }
+    script_runs([ 'script/korapxml2conllu', '--s-bounds-from-morpho', $morpho_fname ], "Runs korapxml2conllu with --s-bounds-from-morpho correctly");
     script_stdout_is $expected, "Converts $morpho_fname correctly";
 }
 
