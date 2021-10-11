@@ -10,6 +10,7 @@ use Encode;
 
 my $MAX_SENTENCE_LENGTH=10000;
 my $COMMENT_START="#";
+my $COMMENT_END="";
 
 my $test=0;
 my $text_no=0;
@@ -117,7 +118,7 @@ foreach my $morpho_zip (@ARGV) {
 
   open (MORPHO_OR_TOKENPIPE, $morphoOrTokenCommand) or die "cannot unzip $morpho_zip";
   open (PLAINTEXTPIPE, $plaintextAndStructureCommand) or die "cannot unzip $data_zip";
-  print "$COMMENT_START foundry = $foundry\n";
+  print "$COMMENT_START foundry = $foundry$COMMENT_END\n";
   while (<MORPHO_OR_TOKENPIPE>) {
     if (/^  inflating: (.*)/) {
       $filename=$1;
@@ -146,7 +147,7 @@ foreach my $morpho_zip (@ARGV) {
           last if(m@</layer>@);
         }
       }
-      print STDOUT "$COMMENT_START filename = $filename\n$COMMENT_START text_id = $docid\n";
+      print STDOUT "$COMMENT_START filename = $filename$COMMENT_END\n$COMMENT_START text_id = $docid$COMMENT_END\n";
       $log->debug("Analyzing $docid");
     } elsif (m@^\s*<f\s+.*name="([^"]+)">([^<]+)</f>@) {
       if ($1 eq "lemma") {
@@ -239,11 +240,11 @@ sub printTokenRanges {
   foreach my $t (@current_lines) {
     print STDOUT " $t->[0]";
   }
-  print "\n$COMMENT_START end_offsets = ", $current_lines[$#current_lines]->[1];
+  print "$COMMENT_END\n$COMMENT_START end_offsets = ", $current_lines[$#current_lines]->[1];
   foreach my $t (@current_lines) {
     print STDOUT " $t->[1]";
   }
-  print "\n";
+  print "$COMMENT_END\n";
 }
 
 sub closeDoc {
