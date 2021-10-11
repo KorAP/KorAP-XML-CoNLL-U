@@ -2,36 +2,52 @@
 use strict;
 use warnings;
 use POSIX;
-use Getopt::Std;
+use Getopt::Long qw(GetOptions :config no_auto_abbrev);
+use Log::Any '$log';
+use Log::Any::Adapter;
 use Encode;
 use IO::Compress::Zip qw(zip $ZipError :constants);
 use File::Basename;
+use Pod::Usage;
 
 my $_COMPRESSION_METHOD = ZIP_CM_DEFLATE;
 my %opts;
 my %processedFilenames;
 
-my $usage=<<EOF;
-Usage: $0 [options] [CoNLL-U-FILE...]
 our $VERSION = '0.4.1.9000';
 
-Options:
- -d        debug
-Description:
- Converts CoNLL-U files that follow KorAP-specific comment conventions
- and contain morphosyntactic and/or dependency annotations to
- corresponding KorAP-XML zip files.
+our $VERSION_MSG = "\nconllu2korapxml - v$VERSION\n";
 
-Examples:
- $0 zca20.spacy.conllu > zca20.spacy.zip
+use constant {
+    # Set to 1 for minimal more debug output (no need to be parametrized)
+    DEBUG => $ENV{KORAPXMLCONLLU_DEBUG} // 0
+};
 
- $0 < zca20.spacy.conllu > zca20.spacy.zip
-EOF
+GetOptions(
+    'force-foundry|f=s'            => \(my $foundry_name = ''),
+    'log|l=s'                      => \(my $log_level = 'warn'),
 
+    'help|h'                       => sub {
+      pod2usage(
+          -verbose  => 99,
+          -sections => 'NAME|DESCRIPTION|SYNOPSIS|ARGUMENTS|OPTIONS|EXAMPLES',
+          -msg      => $VERSION_MSG,
+          -output   => '-'
+      )
+    },
+    'version|v'                    => sub {
+      pod2usage(
+          -verbose => 0,
+          -msg     => $VERSION_MSG,
+          -output  => '-'
+      );
+    }
+);
 
-getopts('hd', \%opts);
-die $usage if($opts{h});
-my $debug=($opts{d}? 1 : 0);
+# Establish logger
+binmode(STDERR, ':encoding(UTF-8)');
+Log::Any::Adapter->set('Stderr', log_level => $log_level);
+$log->notice('Debugging is activated') if DEBUG;
 
 my $docid="";
 my $zip = undef;
@@ -47,7 +63,6 @@ my ($unknown, $known) = (0, 0);
 
 my ($write_morpho, $write_syntax, $base) = (1, 0, 0);
 my $filename;
-my $foundry_name;
 my $first=1;
 my @conllu_files = @ARGV;
 push @conllu_files, "-" if (@conllu_files == 0);
@@ -69,19 +84,21 @@ foreach my $conllu_file (@conllu_files) {
         $first=0;
       }
       if($processedFilenames{$filename}) {
-        print STDERR "WARNING: $filename is already processed\n";
+        $log->warn("WARNING: $filename is already processed");
       }
       $processedFilenames{$filename}=1;
       $i=0;
     } elsif(/^#\s*foundry\s*[:=]\s*(.*)/) {
-      $foundry_name=$1;
-      print STDERR "Foundry: $foundry_name\n" if($debug);
+      if(!$foundry_name) {
+        $foundry_name = $1;
+        $log->debug("Foundry: $foundry_name\n");
+      }
     } elsif(/^(?:#|0\.2)\s+.*id\s*[:=]\s*(.*)/) {
       $docid=$1;
       my $docSigle = $docid;
       $docSigle =~ s/\..*//;
       if($docSigle ne $lastDocSigle) {
-        print STDERR "Analyzing $docSigle\n";
+        $log->info("Analyzing $docSigle");
         $lastDocSigle = $docSigle;
       }
       $known=$unknown=0;
@@ -100,7 +117,7 @@ foreach my $conllu_file (@conllu_files) {
       my @parsed=split('\t');
       chomp  $parsed[9];
       if(@parsed != 10) {
-        print STDERR "WARNING: skipping strange parser output line in $docid\n";
+        $log->warn("WARNING: skipping strange parser output line in $docid");
         $i++;
         next;
       }
@@ -124,7 +141,6 @@ foreach my $conllu_file (@conllu_files) {
    <fs type="lex" xmlns="http://www.tei-c.org/ns/1.0">
     <f name="lex">
      <fs>
-      <f name="lemma">$parsed[2]</f>
       <f name="pos">$parsed[3]</f>
 );
       $morpho .= qq(      <f name="lemma">$parsed[2]</f>\n) if($parsed[2] ne "_" || $parsed[1] eq '_');
@@ -185,3 +201,69 @@ sub layer_header {
 <spanList>
 ));
 }
+
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+conllu2korapxml - Conversion of KorAP-XML CoNLL-U to KorAP-XML zips
+
+=head1 SYNOPSIS
+
+  conllu2korapxml < zca15.tree_tagger.conllu > zca15.tree_tagger.zip
+
+=head1 DESCRIPTION
+
+C<conllu2korapxml> converts CoNLL-U files that follow KorAP-specific comment conventions
+ and contain morphosyntactic and/or dependency annotations to
+ corresponding KorAP-XML zip files.
+
+=head1 INSTALLATION
+
+  $ cpanm https://github.com/KorAP/KorAP-XML-CoNLL-U.git
+
+=head1 OPTIONS
+
+=over 2
+
+=item B<--force-foundry|-f>
+
+Set foundry name and ignore foundry names in the input.
+
+=item B<--help|-h>
+
+Print help information.
+
+=item B<--version|-v>
+
+Print version information.
+
+
+=item B<--log|-l>
+
+Loglevel for I<Log::Any>. Defaults to C<warn>.
+
+=back
+
+=head1 EXAMPLES
+
+ conllu2korapxml -f tree_tagger < t/data/wdf19.morpho.conllu > wdf19.tree_tagger.zip
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2021, L<IDS Mannheim|https://www.ids-mannheim.de/>
+
+Author: Marc Kupietz
+
+Contributors: Nils Diewald
+
+L<KorAP::XML::CoNNL-U> is developed as part of the L<KorAP|https://korap.ids-mannheim.de/>
+Corpus Analysis Platform at the
+L<Leibniz Institute for the German Language (IDS)|http://ids-mannheim.de/>,
+member of the
+L<Leibniz-Gemeinschaft|http://www.leibniz-gemeinschaft.de/>.
+
+This program is free software published under the
+L<BSD-2 License|https://opensource.org/licenses/BSD-2-Clause>.
