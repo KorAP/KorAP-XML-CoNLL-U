@@ -142,6 +142,7 @@ foreach my $conllu_file (@conllu_files) {
      <fs>
       <f name="pos">$parsed[3]</f>
 );
+      $morpho .= qq(      <f name="lemma">$parsed[2]</f>\n) if($parsed[2] ne "_" || $parsed[1] eq '_');
       $morpho .= qq(      <f name="msd">$parsed[5]</f>\n) if($parsed[5] ne "_");
       if($parsed[9] ne "_") {
         if ($parsed[9] =~ /[0-9.e]+/) {
