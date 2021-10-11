@@ -31,6 +31,7 @@ GetOptions(
   'sigle-pattern|p=s'            => \(my $sigle_pattern = ''),
   'extract-attributes-regex|e=s' => \(my $extract_attributes_regex = ''),
   'log|l=s'                      => \(my $log_level = 'warn'),
+  'columns|c=n'                  => \(my $columns = 10),
 
   'help|h'                       => sub {
     pod2usage(
@@ -195,7 +196,11 @@ foreach my $morpho_zip (@ARGV) {
         push @current_lines, \@vals;
         $known++;
         $conll[$ID_idx] = $#current_lines+1;
-        $current .= join("\t", @conll) . "\n"; # conll columns
+        if ($columns == 1) {
+          $current .= "$conll[1]\n";
+        } else {
+          $current .= join("\t", @conll[0..$columns-1]) . "\n"; # conll columns
+        }
         fetch_plaintext($docid);
         if ($sentence_ends{$docid}{$current_to}) {
           $current .= "\n";
@@ -213,7 +218,11 @@ foreach my $morpho_zip (@ARGV) {
       push @current_lines, \@vals;
       # convert gathered information to CONLL
       $conll[$ID_idx] = $#current_lines+1;
-      $current .= join("\t", @conll) . "\n"; # conll columns
+      if ($columns == 1) {
+        $current .= "$conll[1]\n";
+      } else {
+        $current .= join("\t", @conll[0..$columns-1]) . "\n"; # conll columns
+      }
       if($conll[$XPOS_idx] eq '$.' || ($conll[$XPOS_idx] eq 'SENT' && $token eq '.') || $known + $unknown >= $MAX_SENTENCE_LENGTH) {
         $current .= "\n";
         if($known + $unknown > 0) { # only print sentence if it contains some words
@@ -382,6 +391,10 @@ Convert only texts from the KorAP XML zip files with folder names (i.e. sigles) 
 =item B<--extract-attribute-pattern|-e>
 
 Extract element/attribute regular expressions to comments.
+
+=item B<--columns>=I<int> | B<-c> I<int>
+
+Print n columns (default: 10). If n=1, only the token itself is printed.
 
 =item B<--help|-h>
 
