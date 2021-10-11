@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 28;
+use Test::More tests => 30;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -51,8 +51,18 @@ for my $base_fname (glob("t/data/*\.zip")) {
     script_stdout_is $expected, "Converts $base_fname correctly to CoNLL-U";
 }
 
-my $test_tempdir = tempdir();
 my $expected;
+if (open(my $fh, '<', 't/data/goe.1c.txt')) {
+    local $/;
+    $expected = <$fh>;
+    close($fh);
+} else {
+    fail("cannot open file.");
+}
+script_runs([ 'script/korapxml2conllu', '-c',  '1', 't/data/goe.zip' ], "Runs korapxml2conllu in one column mode");
+script_stdout_is $expected, "Converts correctly in one column mode.";
+
+my $test_tempdir = tempdir();
 my $conllu_fname = "t/data/goe.morpho.conllu";
 if(open(my $fh, '<', $conllu_fname )) {
     local $/;
