@@ -278,7 +278,6 @@ sub fetch_plaintext {
   my ($current_id, $current_from, $current_to);
 
   if($plain_texts{$target_id} && (!$baseOnly || $sentence_ends{$target_id}{-1})) {
-#    print STDERR "already got $target_id\n";
     $log->debug("Already got $target_id");
     return 1;
   }
