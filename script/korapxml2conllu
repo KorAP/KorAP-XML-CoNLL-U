@@ -30,6 +30,7 @@ use constant {
 GetOptions(
   'sigle-pattern|p=s'            => \(my $sigle_pattern = ''),
   'extract-attributes-regex|e=s' => \(my $extract_attributes_regex = ''),
+  's-bounds-from-morpho'         => \(my $s_bounds_from_morpho = 0),
   'log|l=s'                      => \(my $log_level = 'warn'),
   'columns|c=n'                  => \(my $columns = 10),
 
@@ -99,9 +100,10 @@ foreach my $morpho_zip (@ARGV) {
   my ($morphoOrTokenCommand, $plaintextAndStructureCommand);
   if (!$baseOnly) {
     $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${sigle_pattern}*/*/*/morpho.xml' $zipsiglepattern |";
-    if ($extract_attributes_regex) {
+    if ($extract_attributes_regex || !$s_bounds_from_morpho) {
       $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/[sd][ta]*.xml' $zipsiglepattern |";
     } else {
+      $log->debug("Not reading structure information.");
       $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/data.xml' $zipsiglepattern |";
     }
   } else {
@@ -203,6 +205,7 @@ foreach my $morpho_zip (@ARGV) {
         }
         fetch_plaintext($docid);
         if ($sentence_ends{$docid}{$current_to}) {
+          $log->debug("Using sentence end for $docid \@$current_to");
           $current .= "\n";
           printTokenRanges();
           print STDOUT $current;
@@ -223,7 +226,8 @@ foreach my $morpho_zip (@ARGV) {
       } else {
         $current .= join("\t", @conll[0..$columns-1]) . "\n"; # conll columns
       }
-      if($conll[$XPOS_idx] eq '$.' || ($conll[$XPOS_idx] eq 'SENT' && $token eq '.') || $known + $unknown >= $MAX_SENTENCE_LENGTH) {
+      if($sentence_ends{$docid}{$current_to} || ($s_bounds_from_morpho && $conll[$XPOS_idx] eq '$.' || ($conll[$XPOS_idx] eq 'SENT' && $token eq '.')) || $known + $unknown >= $MAX_SENTENCE_LENGTH) {
+        $log->debug("Using sentence end for $docid \@$current_to");
         $current .= "\n";
         if($known + $unknown > 0) { # only print sentence if it contains some words
           printTokenRanges();
@@ -277,7 +281,7 @@ sub fetch_plaintext {
   my $text_count = 0;
   my ($current_id, $current_from, $current_to);
 
-  if($plain_texts{$target_id} && (!$baseOnly || $sentence_ends{$target_id}{-1})) {
+  if($plain_texts{$target_id} && ($s_bounds_from_morpho || $sentence_ends{$target_id})) {
     $log->debug("Already got $target_id");
     return 1;
   }
@@ -288,14 +292,17 @@ sub fetch_plaintext {
       $text_started=0;
     } elsif(/<layer[^>]+docid="([^"]*)/) {
       $docid=$1;
-      $sentence_ends{$docid}{-1}=1;
     } elsif(m@<span @) {
         ($current_id) = /id="[^0-9]*([^\"]*)"/;
         ($current_from) = /from="([^\"]*)"/;
         ($current_to) = /to="([^\"]*)"/;
     } elsif(m@<f\s[^>]*>s</f>@) {
-      $log->debug("Found sentence end for $docid \@$current_to");
-      $sentence_ends{$docid}{$current_to}=1;
+      if ($s_bounds_from_morpho) {
+        $log->debug("Ignoring sentence end for $docid \@$current_to because of --s-bounds-from-morpho");
+      } else {
+        $log->debug("Found sentence end for $docid \@$current_to");
+        $sentence_ends{$docid}{$current_to} = 1;
+      }
     } elsif($extract_attributes_regex && m@<f\sname="name"[^>]*>([^<]+)</f>@) {
       my $current_element = $1;
       $log->debug("Looking for matching attributes in $docid");
@@ -394,6 +401,10 @@ Extract element/attribute regular expressions to comments.
 =item B<--columns>=I<int> | B<-c> I<int>
 
 Print n columns (default: 10). If n=1, only the token itself is printed.
+
+=item B<--s-bounds-from-morpho>
+
+Get sentence boundary information from tagger output rather than from s annotion in structure.xml files.
 
 =item B<--help|-h>
 
