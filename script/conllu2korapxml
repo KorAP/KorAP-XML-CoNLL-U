@@ -135,12 +135,14 @@ foreach my $conllu_file (@conllu_files) {
 </rel>
 </span>
 @;
-        }
-        $morpho .= qq(  <span id="s${s}_n$t" from="$spansFrom[$t]" to="$spansTo[$t]">
+      }
+      my $pos = $parsed[3];
+      $pos =~ s/\|.*//;
+      $morpho .= qq(  <span id="s${s}_n$t" from="$spansFrom[$t]" to="$spansTo[$t]">
    <fs type="lex" xmlns="http://www.tei-c.org/ns/1.0">
     <f name="lex">
      <fs>
-      <f name="pos">$parsed[3]</f>
+      <f name="pos">$pos</f>
 );
       $morpho .= qq(      <f name="lemma">$parsed[2]</f>\n) if($parsed[2] ne "_" || $parsed[1] eq '_');
       $morpho .= qq(      <f name="msd">$parsed[5]</f>\n) if($parsed[5] ne "_");
