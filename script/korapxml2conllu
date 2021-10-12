@@ -87,7 +87,7 @@ foreach my $morpho_zip (@ARGV) {
     close(CONLL);
     next;
   }
-  $data_zip =~ s/\.([^.]+)\.zip$/.zip/;
+  $data_zip =~ s/\.([^\/.]+)\.zip$/.zip/;
   my $foundry = $1;
   die "cannot open data file $data_zip corresponding to $morpho_zip" if(! -r $data_zip);
   
