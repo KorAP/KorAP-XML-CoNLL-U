@@ -33,6 +33,10 @@ GetOptions(
   's-bounds-from-morpho'         => \(my $s_bounds_from_morpho = 0),
   'log|l=s'                      => \(my $log_level = 'warn'),
   'columns|c=n'                  => \(my $columns = 10),
+  'word2vec|lm-training-data'    => \(my $lm_training_data = 1),
+  'token-separator|s=s'          => \(my $token_separator = "\n"),
+  'no-offsets'                   => \(my $no_offsets = 0),
+  'no-comments'                  => \(my $no_comments = 0),
 
   'help|h'                       => sub {
     pod2usage(
@@ -55,6 +59,13 @@ GetOptions(
 binmode(STDERR, ':encoding(UTF-8)');
 Log::Any::Adapter->set('Stderr', log_level => $log_level);
 $log->notice('Debugging is activated') if DEBUG;
+
+if ($lm_training_data) {
+  $columns = 1;
+  $no_comments = 1;
+  $no_offsets = 1;
+  $token_separator = " ";
+}
 
 my $docid="";
 my ($current_id, $current_from, $current_to, $token);
@@ -121,7 +132,7 @@ foreach my $morpho_zip (@ARGV) {
 
   open (MORPHO_OR_TOKENPIPE, $morphoOrTokenCommand) or die "cannot unzip $morpho_zip";
   open (PLAINTEXTPIPE, $plaintextAndStructureCommand) or die "cannot unzip $data_zip";
-  print "$COMMENT_START foundry = $foundry$COMMENT_END\n";
+  print "$COMMENT_START foundry = $foundry$COMMENT_END\n" unless ($no_comments);
   while (<MORPHO_OR_TOKENPIPE>) {
     if (/^  inflating: (.*)/) {
       $filename=$1;
@@ -150,7 +161,7 @@ foreach my $morpho_zip (@ARGV) {
           last if(m@</layer>@);
         }
       }
-      print STDOUT "$COMMENT_START filename = $filename$COMMENT_END\n$COMMENT_START text_id = $docid$COMMENT_END\n";
+      print STDOUT "$COMMENT_START filename = $filename$COMMENT_END\n$COMMENT_START text_id = $docid$COMMENT_END\n" unless($no_comments);
       $log->debug("Analyzing $docid");
     } elsif (m@^\s*<f\s+.*name="([^"]+)">([^<]+)</f>@) {
       if ($1 eq "lemma") {
@@ -199,7 +210,7 @@ foreach my $morpho_zip (@ARGV) {
         $known++;
         $conll[$ID_idx] = $#current_lines+1;
         if ($columns == 1) {
-          $current .= "$conll[1]\n";
+          $current .= "$conll[1]$token_separator" ;
         } else {
           $current .= join("\t", @conll[0..$columns-1]) . "\n"; # conll columns
         }
@@ -249,11 +260,12 @@ foreach my $morpho_zip (@ARGV) {
 exit;
 
 sub printTokenRanges {
+  return if($no_offsets);
   print "$COMMENT_START start_offsets = ", $current_lines[0]->[0];
   foreach my $t (@current_lines) {
     print STDOUT " $t->[0]";
   }
-  print "$COMMENT_END\n$COMMENT_START end_offsets = ", $current_lines[$#current_lines]->[1];
+  print "$COMMENT_END\n$COMMENT_START end_offsets = ", $current_lines[$#current_lines]->[1] unless($no_comments);
   foreach my $t (@current_lines) {
     print STDOUT " $t->[1]";
   }
@@ -405,6 +417,22 @@ Print n columns (default: 10). If n=1, only the token itself is printed.
 =item B<--s-bounds-from-morpho>
 
 Get sentence boundary information from tagger output rather than from s annotion in structure.xml files.
+
+=item B<--token-separator>=I<string>
+
+Token separator.
+
+=item B<--no-comments>
+
+Do not print comments.
+
+=item B<--no-offsets>
+
+Do not print offsets.
+
+=item B<--word2vec>
+
+Print output in word2vec (tokenized) one sentence per line format.
 
 =item B<--help|-h>
 
