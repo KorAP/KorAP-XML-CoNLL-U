@@ -5,7 +5,7 @@ Tool package to convert between KorAP XML format and [CoNLL-U format](https://un
 ## Description
 
 The state of the package is very preliminary. Currently, two scripts are provided:
-* `korapxml2conllu` converts KorAP XML zip "base" and "morpho" (with POS and lemma annotations) files to corresponding CoNLL-U files with foundry information, text ids and token offsets in comments
+* `korapxml2conllu` converts KorAP XML zip "base" and "morpho" (with POS and lemma annotations) files to corresponding CoNLL-U (or word2vec input) files with foundry information, text ids and token offsets in comments
 * `conllu2korapxml` converts CoNLL-U files that follow KorAP-specific comment conventions
   and contain morphosyntactic and/or dependency annotations to
   corresponding KorAP-XML zip files
@@ -93,6 +93,35 @@ $ ./script/korapxml2conllu t/data/goe.zip | head -20
 5	Champagne	_	_	_	_	_	_	_	_
 
 ```
+#### Example producing language model training input from KorAP-XML
+
+```
+./script/korapxml2conllu --word2vec t/data/wdf19.zip
+```
+
+```
+Arts visuels Pourquoi toujours vouloir séparer BD et Manga ?
+Ffx 18:20 fév 25 , 2003 ( CET ) soit on ne sépara pas , soit alors on distingue aussi , le comics , le manwa , le manga ..
+la bd belge et touts les auteurs européens ..
+on commence aussi a parlé de la bd africaine et donc ...
+wikipedia ce prete parfaitement à ce genre de decryptage .
+…
+```
+
+#### Example producing language model training input with preceding metadata columns
+
+```
+./script/korapxml2conllu -m '<textSigle>([^<]+)' -m '<creatDate>([^<]+)' --word2vec t/data/wdf19.zip 
+```
+
+```
+WDF19/A0000.10894	2014.08.28	Arts visuels Pourquoi toujours vouloir séparer BD et Manga ?
+WDF19/A0000.10894	2014.08.28	Ffx 18:20 fév 25 , 2003 ( CET ) soit on ne sépara pas , soit alors on distingue aussi , le comics , le manwa , le manga ..
+WDF19/A0000.10894	2014.08.28	la bd belge et touts les auteurs européens ..
+WDF19/A0000.10894	2014.08.28	on commence aussi a parlé de la bd africaine et donc ...
+WDF19/A0000.10894	2014.08.28	wikipedia ce prete parfaitement à ce genre de decryptage .
+```
+
 ### `conllu2korapxml`
 ```
 ./script/conllu2korapxml < t/data/goe.morpho.conllu > goe.morpho.zip
