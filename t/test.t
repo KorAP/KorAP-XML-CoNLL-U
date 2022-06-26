@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 37;
+use Test::More tests => 41;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -75,6 +75,40 @@ for my $base_fname (glob("t/data/*\.zip")) {
     }
     script_runs([ 'script/korapxml2conllu', $base_fname ], "Runs korapxml2conllu with base input");
     script_stdout_is $expected, "Converts $base_fname correctly to CoNLL-U";
+}
+
+for my $w2v_fname (glob("t/data/*\.w2v_simple")) {
+    my $base_fname = $w2v_fname =~ s/(.*)\.w2v_simple/$1.zip/r;
+    next if (!-e $base_fname);
+
+    my $expected;
+    if (open(my $fh, '<', $w2v_fname)) {
+        local $/;
+        $expected = <$fh>;
+        close($fh);
+    } else {
+        fail("cannot open file $w2v_fname");
+        next;
+    }
+    script_runs([ 'script/korapxml2conllu', '--word2vec', $base_fname ], "Runs korapxml2conllu with base input and w2v output");
+    script_stdout_is $expected, "Converts $base_fname correctly to word2vec input format";
+}
+
+for my $w2v_fname (glob("t/data/*\.w2v")) {
+    my $base_fname = $w2v_fname =~ s/(.*)\.w2v/$1.zip/r;
+    next if (!-e $base_fname);
+
+    my $expected;
+    if (open(my $fh, '<', $w2v_fname)) {
+        local $/;
+        $expected = <$fh>;
+        close($fh);
+    } else {
+        fail("cannot open file $w2v_fname");
+        next;
+    }
+    script_runs([ 'script/korapxml2conllu', '-m', '<textSigle>([^<.]+)', '-m', '<creatDate>([^<]{7})', '--word2vec', $base_fname ], "Runs korapxml2conllu with base input and w2v and metadata output");
+    script_stdout_is $expected, "Converts $base_fname correctly to word2vec input format together with some metadata";
 }
 
 my $expected;
