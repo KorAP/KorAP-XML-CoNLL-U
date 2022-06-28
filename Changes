@@ -1,3 +1,5 @@
+        - --word2vec|lm-training-data option added to print word2vec input format
+        - --extract-metadata-regex added to extract some metadata values as context input for language model training
         - by default sentence boundary information is now read from structure.xml files (use --s-bounds-from-morpho otherwise)
         - korapxml2conllu: use morpho.xml if present when run on base zips
         - korapxml2conllu: new option -c <columns>
