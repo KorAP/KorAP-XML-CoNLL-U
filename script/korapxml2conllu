@@ -17,8 +17,14 @@ my $text_no=0;
 my %opts;
 my %plain_texts;
 my %sentence_ends;
+my %metadata;
 
-our $VERSION = '0.4.1.9000';
+my $offsets = 1;
+my $comments = 1;
+my $print_metadata = 0;
+my $lm_training_data = 0;
+
+our $VERSION = '0.4.2.9000';
 
 our $VERSION_MSG = "\nkorapxml2conllu - v$VERSION\n";
 
@@ -33,11 +39,11 @@ GetOptions(
   's-bounds-from-morpho'         => \(my $s_bounds_from_morpho = 0),
   'log|l=s'                      => \(my $log_level = 'warn'),
   'columns|c=n'                  => \(my $columns = 10),
-  'word2vec|lm-training-data'    => \(my $lm_training_data = 1),
+  'word2vec|lm-training-data!'   => \$lm_training_data,
   'token-separator|s=s'          => \(my $token_separator = "\n"),
-  'no-offsets'                   => \(my $no_offsets = 0),
-  'no-comments'                  => \(my $no_comments = 0),
-
+  'offsets!'                     => \$offsets,
+  'comments!'                    => \$comments,
+  'metadata|m!'                  => \$print_metadata,
   'help|h'                       => sub {
     pod2usage(
       -verbose  => 99,
@@ -62,8 +68,8 @@ $log->notice('Debugging is activated') if DEBUG;
 
 if ($lm_training_data) {
   $columns = 1;
-  $no_comments = 1;
-  $no_offsets = 1;
+  $comments = 0;
+  $offsets = 0;
   $token_separator = " ";
 }
 
@@ -109,10 +115,14 @@ foreach my $morpho_zip (@ARGV) {
 
   $baseOnly = $morpho_zip eq $data_zip;
   my ($morphoOrTokenCommand, $plaintextAndStructureCommand);
+  my $zip_content_pattern = "[sd][ta]*";
+  if ($print_metadata) {
+    $zip_content_pattern = "[sdh][tae]*";
+  }
   if (!$baseOnly) {
     $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${sigle_pattern}*/*/*/morpho.xml' $zipsiglepattern |";
     if ($extract_attributes_regex || !$s_bounds_from_morpho) {
-      $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/[sd][ta]*.xml' $zipsiglepattern |";
+      $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/$zip_content_pattern.xml' $zipsiglepattern |";
     } else {
       $log->debug("Not reading structure information.");
       $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/data.xml' $zipsiglepattern |";
@@ -127,12 +137,12 @@ foreach my $morpho_zip (@ARGV) {
     }
     $morphoOrTokenCommand =~ s/-l/-c/;
     $morphoOrTokenCommand .= ' |';
-    $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/[sd][ta]*.xml' $zipsiglepattern |";
+    $plaintextAndStructureCommand = "$UNZIP -c $data_zip " . "'*/${sigle_pattern}*/*/$zip_content_pattern.xml' " . "$zipsiglepattern |";
   }
 
   open (MORPHO_OR_TOKENPIPE, $morphoOrTokenCommand) or die "cannot unzip $morpho_zip";
   open (PLAINTEXTPIPE, $plaintextAndStructureCommand) or die "cannot unzip $data_zip";
-  print "$COMMENT_START foundry = $foundry$COMMENT_END\n" unless ($no_comments);
+  print "$COMMENT_START foundry = $foundry$COMMENT_END\n" if ($comments);
   while (<MORPHO_OR_TOKENPIPE>) {
     if (/^  inflating: (.*)/) {
       $filename=$1;
@@ -161,7 +171,7 @@ foreach my $morpho_zip (@ARGV) {
           last if(m@</layer>@);
         }
       }
-      print STDOUT "$COMMENT_START filename = $filename$COMMENT_END\n$COMMENT_START text_id = $docid$COMMENT_END\n" unless($no_comments);
+      print STDOUT "$COMMENT_START filename = $filename$COMMENT_END\n$COMMENT_START text_id = $docid$COMMENT_END\n" if($comments);
       $log->debug("Analyzing $docid");
     } elsif (m@^\s*<f\s+.*name="([^"]+)">([^<]+)</f>@) {
       if ($1 eq "lemma") {
@@ -219,7 +229,8 @@ foreach my $morpho_zip (@ARGV) {
           $log->debug("Using sentence end for $docid \@$current_to");
           $current .= "\n";
           printTokenRanges();
-          print STDOUT $current;
+          print STDOUT "$docid\t$metadata{$docid}{year}\t" if ($print_metadata);
+          print STDOUT "$current";
           $current = "";
           $known = 0;
           $unknown = 0;
@@ -260,12 +271,12 @@ foreach my $morpho_zip (@ARGV) {
 exit;
 
 sub printTokenRanges {
-  return if($no_offsets);
+  return if(!$offsets);
   print "$COMMENT_START start_offsets = ", $current_lines[0]->[0];
   foreach my $t (@current_lines) {
     print STDOUT " $t->[0]";
   }
-  print "$COMMENT_END\n$COMMENT_START end_offsets = ", $current_lines[$#current_lines]->[1] unless($no_comments);
+  print "$COMMENT_END\n$COMMENT_START end_offsets = ", $current_lines[$#current_lines]->[1] if($comments);
   foreach my $t (@current_lines) {
     print STDOUT " $t->[1]";
   }
@@ -293,7 +304,7 @@ sub fetch_plaintext {
   my $text_count = 0;
   my ($current_id, $current_from, $current_to);
 
-  if($plain_texts{$target_id} && ($s_bounds_from_morpho || $sentence_ends{$target_id})) {
+  if($plain_texts{$target_id} && ($s_bounds_from_morpho || $sentence_ends{$target_id}) && (!$print_metadata || $metadata{$target_id}{year})) {
     $log->debug("Already got $target_id");
     return 1;
   }
@@ -302,6 +313,15 @@ sub fetch_plaintext {
       $docid=$1;
       $log->debug("Getting plain text for $docid");
       $text_started=0;
+    } elsif (/<textSigle>([^<]+)/) {
+      $docid = $1;
+      $docid =~ s@/@_@;
+      $log->debug("textsigle=$docid");
+    } elsif (/<catRef[^>]*target="topic\.([^"]*)/) {
+      $metadata{$docid}{topic}=$1;
+    } elsif (/<creatDate[^>]*>([^<]+)/) {
+      $log->debug("found create date: $1 for $docid");
+      $metadata{$docid}{year}=$1;
     } elsif(/<layer[^>]+docid="([^"]*)/) {
       $docid=$1;
     } elsif(m@<span @) {
@@ -336,7 +356,7 @@ sub fetch_plaintext {
       s/&amp;/&/go;
       tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
       $plain_texts{$docid} = $_;
-      last if(!$extract_attributes_regex && ($text_count++ > 1 && $plain_texts{$target_id}));
+      last if(!$extract_attributes_regex && ($text_count++ > 1 && $plain_texts{$target_id} && (!$print_metadata || $metadata{$target_id}{year})));
     } elsif (m@<text>(.*)@) {
       $_= decode("utf-8", $1, Encode::FB_DEFAULT);
       s/&lt;/</go;
@@ -353,7 +373,7 @@ sub fetch_plaintext {
       tr/…•⋅»«ˮ“”„›‹ʼ‘’‚′‐‑‒–—―⁓⁻₋−﹣－/...""""""'''''''-/;
       $plain_texts{$docid} .= $_;
       $text_started=0;
-      last if(!$extract_attributes_regex && ($text_count++ > 1 && $plain_texts{$target_id}));
+      last if(!$extract_attributes_regex && ($text_count++ > 1 && $plain_texts{$target_id} && (!$print_metadata || $metadata{$target_id}{year})));
     } elsif ($text_started) {
       chomp;
       $_ = decode("utf-8", $_, Encode::FB_DEFAULT) . ' ';
@@ -422,17 +442,21 @@ Get sentence boundary information from tagger output rather than from s annotion
 
 Token separator.
 
-=item B<--no-comments>
+=item B<--(no)comments>
 
-Do not print comments.
+Switch comment printing on or off (default: on).
 
-=item B<--no-offsets>
+=item B<--(no)offsets>
 
-Do not print offsets.
+Switch offsets printing on or off (default: on).
 
 =item B<--word2vec>
 
 Print output in word2vec (tokenized) one sentence per line format.
+
+=item B<--(no)metadata|-m>
+
+Switch metadata printing on or off (default: off). Currently only works together with <--word2vec> option.
 
 =item B<--help|-h>
 
@@ -451,11 +475,17 @@ Loglevel for I<Log::Any>. Defaults to C<warn>.
 
 =head1 EXAMPLES
 
+=head2 Extract to CoNNL-U with posting and div ids:
+
  korapxml2conllu -e '(posting/id|div/id)' t/data/wdf19.zip
+
+=head2 Extract to word2vec input format with leading metadata columns:
+
+ korapxml2conllu --word2vec -m t/data/wdf19.zip
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2021, L<IDS Mannheim|https://www.ids-mannheim.de/>
+Copyright (C) 2021-2022, L<IDS Mannheim|https://www.ids-mannheim.de/>
 
 Author: Marc Kupietz
 
