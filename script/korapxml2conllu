@@ -451,7 +451,7 @@ Print n columns (default: 10). If n=1, only the token itself is printed.
 
 =item B<--s-bounds-from-morpho>
 
-Get sentence boundary information from tagger output rather than from s annotion in structure.xml files.
+Get sentence boundary information from tagger output rather than from s annotation in structure.xml files.
 
 =item B<--token-separator>=I<string>
 
