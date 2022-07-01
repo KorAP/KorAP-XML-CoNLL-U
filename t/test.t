@@ -107,7 +107,7 @@ for my $w2v_fname (glob("t/data/*\.w2v")) {
         fail("cannot open file $w2v_fname");
         next;
     }
-    script_runs([ 'script/korapxml2conllu', '-m', '<textSigle>([^<.]+)', '-m', '<creatDate>([^<]{7})', '--word2vec', $base_fname ], "Runs korapxml2conllu with base input and w2v and metadata output");
+    script_runs([ 'script/korapxml2conllu', '-m', '<textSigle>([^<.]+)', '-m', '<creatDate>([^<]{4,7})', '--word2vec', $base_fname ], "Runs korapxml2conllu with base input and w2v and metadata output");
     script_stdout_is $expected, "Converts $base_fname correctly to word2vec input format together with some metadata";
 }
 

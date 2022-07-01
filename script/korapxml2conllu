@@ -65,7 +65,6 @@ GetOptions(
 
 if (@extract_metadata_regex) {
   $extract_metadata = 1;
-  @extract_metadata_regex = split(/,/,join(',',@extract_metadata_regex));
 }
 
 # Establish logger
