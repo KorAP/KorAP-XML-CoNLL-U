@@ -1,27 +1,42 @@
 # KorAP-XML-CoNLL-U
 
-Tool package to convert between KorAP XML format and [CoNLL-U format](https://universaldependencies.org/format.html) including token boundary information. 
+Tool package to convert between KorAP XML format and [CoNLL-U format](https://universaldependencies.org/format.html), as
+well as other simple formats,including token boundary information.
 
 ## Description
 
 The state of the package is very preliminary. Currently, two scripts are provided:
-* `korapxml2conllu` converts KorAP XML zip "base" and "morpho" (with POS and lemma annotations) files to corresponding CoNLL-U (or word2vec input) files with foundry information, text ids and token offsets in comments
+
+* `korapxml2conllu` converts KorAP XML zip "base" and "morpho" (with POS and lemma annotations) files to corresponding
+  CoNLL-U (or word2vec input) files with foundry information, text ids and token offsets in comments
 * `conllu2korapxml` converts CoNLL-U files that follow KorAP-specific comment conventions
   and contain morphosyntactic and/or dependency annotations to
   corresponding KorAP-XML zip files
 
-**! This software is in its early stages and not stable yet! Use it on your own risk! It is very likely to be changed or replaced.**
+**! This software is in its early stages and not stable yet! Use it on your own risk! It is very likely to be changed or
+replaced.**
+
 ## Installation
+
+### Using cpanm
+
+```bash
+cpanm https://github.com/KorAP/KorAP-XML-CoNLL-U.git
+```
+
+### Local
 
 ```shell script
 perl Makefile.PL
 make
 make test TEST_VERBOSE=1
-# make install
+make install
 ```
 
 ## Command Line Invocation
+
 ### `korapxml2conllu`
+
 ```
 
 $ korapxml2conllu wpd17.tree_tagger.zip | head -42
@@ -93,6 +108,7 @@ $ ./script/korapxml2conllu t/data/goe.zip | head -20
 5	Champagne	_	_	_	_	_	_	_	_
 
 ```
+
 #### Example producing language model training input from KorAP-XML
 
 ```
@@ -123,6 +139,7 @@ WDF19/A0000.10894	2014.08.28	wikipedia ce prete parfaitement à ce genre de decr
 ```
 
 ### `conllu2korapxml`
+
 ```
 ./script/conllu2korapxml < t/data/goe.morpho.conllu > goe.morpho.zip
 ```
@@ -146,6 +163,7 @@ It is published under the BSD 2-clause "Simplified" license.
 Contributions are very welcome!
 
 Your contributions should ideally be committed via our [Gerrit server](https://korap.ids-mannheim.de/gerrit/)
-to facilitate reviewing (see [Gerrit Code Review - A Quick Introduction](https://korap.ids-mannheim.de/gerrit/Documentation/intro-quick.html)
+to facilitate reviewing (
+see [Gerrit Code Review - A Quick Introduction](https://korap.ids-mannheim.de/gerrit/Documentation/intro-quick.html)
 if you are not familiar with Gerrit). However, we are also happy to accept comments and pull requests
 via GitHub.
