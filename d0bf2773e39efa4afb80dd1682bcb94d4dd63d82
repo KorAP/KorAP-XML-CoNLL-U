@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "60b10476_92f2b9f4",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2022-07-01T07:53:47Z",
+      "side": 1,
+      "message": "@Nils: What would be the best way to introduce another minimal executable korapxml2word2vec that sets the --word2vec option and otherwise just passes all parameters to korapxml2conllu?\n\n* symbolic link\n* shell script\n* perl script",
+      "revId": "d0bf2773e39efa4afb80dd1682bcb94d4dd63d82",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
