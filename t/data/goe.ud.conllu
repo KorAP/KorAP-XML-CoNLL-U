@@ -1,0 +1,68 @@
+# generator = UDPipe 2, https://lindat.mff.cuni.cz/services/udpipe
+# this is a comment that should be ignored
+# udpipe_model = german-hdt-ud-2.6-200830
+# udpipe_model_licence = CC BY-NC-SA
+# foundry = base
+# filename = GOE/AGA/00000/base/tokens.xml  
+# text_id = GOE_AGA.00000
+# start_offsets = 0 0 9 12
+# end_offsets = 22 8 11 22
+1	Campagne	Campagne	NOUN	NN	Gender=Fem|Number=Sing|Person=3	0	root	_	_
+2	in	in	ADP	APPR	AdpType=Prep|Case=Dat	3	case	_	_
+3	Frankreich	Frankreich	PROPN	NE	Case=Dat|Number=Sing|Person=3	1	nmod	_	_
+
+# start_offsets = 23 23
+# end_offsets = 27 27
+1	1792	1792	NUM	CARD	Number=Plur|NumType=Card|Person=3	0	root	_	_
+
+# start_offsets = 28 28 33 37 40 44 53
+# end_offsets = 54 32 36 39 43 53 54
+1	auch	auch	ADV	ADV	_	2	advmod	_	_
+2	ich	ich	PRON	PPER	Case=Nom|Number=Sing|Person=1|PronType=Prs	0	root	_	_
+3	in	in	ADP	APPR	AdpType=Prep|Case=Dat	5	case	_	_
+4	der	der	DET	ART	Case=Dat|Gender=Fem|Number=Sing|PronType=Art	5	det	_	_
+5	Champagne	Champagne	NOUN	NN	Gender=Fem|Number=Sing|Person=3	2	nmod	_	_
+6	!	!	PUNCT	$.	PunctType=Peri	2	punct	_	_
+
+# start_offsets = 55 55 59 63 70 75 82 87 94 102 105 111 120 124 130 134 140 144 151 153 163 175 187 191 207 209 213 218 222 239 248 255 259 264 267 271 277 283 297 307 319
+# end_offsets = 320 58 62 69 74 81 86 93 101 104 110 119 123 129 133 139 143 151 152 162 174 186 190 207 208 212 217 221 238 247 254 258 263 266 270 276 282 296 306 319 320
+1	den	den	DET	ART	Case=Acc|Gender=Masc|Number=Sing|PronType=Art	3	det	_	_
+2	23.	23.	ADJ	ADJA	Person=3	3	amod	_	_
+3	August	August	NOUN	NN	Gender=Masc|Number=Sing|Person=3	11	obj	_	_
+4	1792	1792	NUM	CARD	Number=Plur|NumType=Card|Person=3	3	nmod	_	_
+5	gleich	gleich	ADJ	ADJD	Degree=Pos|Variant=Short	8	advmod	_	_
+6	nach	nach	ADP	APPR	AdpType=Prep|Case=Dat	8	case	_	_
+7	meiner	mein	PRON	PPOSAT	Case=Dat|Gender=Fem|Number=Sing|Person=1|Poss=Yes|PronType=Prs	8	det	_	_
+8	Ankunft	Ankunft	NOUN	NN	Gender=Fem|Number=Sing|Person=3	3	nmod	_	_
+9	in	in	ADP	APPR	AdpType=Prep|Case=Dat	10	case	_	_
+10	Mainz	Mainz	PROPN	NE	Case=Dat|Number=Sing|Person=3	8	nmod	_	_
+11	besuchte	besuchen	VERB	VVFIN	Mood=Ind|Number=Sing|Person=1|Tense=Past|VerbForm=Fin	0	root	_	_
+12	ich	ich	PRON	PPER	Case=Nom|Number=Sing|Person=1|PronType=Prs	11	nsubj	_	_
+13	Herrn	Herr	NOUN	NN	Gender=Masc|Number=Sing|Person=3	11	iobj	_	_
+14	von	von	ADP	APPR	AdpType=Prep|Case=Dat	15	case	_	_
+15	Stein	Stein	PROPN	NE	Gender=Masc|Number=Sing|Person=3	13	nmod	_	_
+16	den	den	DET	ART	Case=Acc|Gender=Masc|Number=Sing|PronType=Art	21	det	_	_
+17	älteren	alt	ADJ	ADJA	Case=Acc|Degree=Cmp|Gender=Masc|Number=Sing	21	amod	_	_
+18	,	,	PUNCT	$,	PunctType=Comm	20	punct	_	_
+19	königlich	königlich	ADJ	ADJD	Degree=Pos|Variant=Short	20	advmod	_	_
+20	preußischen	preußisch	ADJ	ADJA	Case=Acc|Degree=Pos|Gender=Masc|Number=Sing	21	amod	_	_
+21	Kammerherrn	Kammerherr	NOUN	NN	Gender=Masc|Number=Sing|Person=3	11	obj	_	_
+22	und	und	CCONJ	KON	_	23	cc	_	_
+23	Oberforstmeister	Meister	NOUN	NN	Gender=Masc|Number=Sing|Person=3	21	conj	_	_
+24	,	,	PUNCT	$,	PunctType=Comm	30	punct	_	_
+25	der	der	PRON	PRELS	Case=Nom|Gender=Masc|Number=Sing|Person=3|PronType=Rel	30	nsubj	_	_
+26	eine	eine	DET	ART	Case=Acc|Gender=Fem|Number=Sing|PronType=Art	27	det	_	_
+27	Art	Art	NOUN	NN	Gender=Fem|Number=Sing|Person=3	30	obj	_	_
+28	Residentenstelle	Stelle	NOUN	NN	Gender=Fem|Number=Sing|Person=3	27	appos	_	_
+29	daselbst	daselbst	ADV	ADV	_	30	advmod	_	_
+30	versah	versehen	VERB	VVFIN	Mood=Ind|Number=Sing|Person=3|Tense=Past|VerbForm=Fin	23	acl	_	_
+31	und	und	CCONJ	KON	_	39	cc	_	_
+32	sich	sich	PRON	PRF	Case=Acc|Person=3|PronType=Prs|Reflex=Yes	39	obj	_	_
+33	im	im	ADP	APPRART	AdpType=Prep|Case=Dat|PronType=Art	34	case	_	_
+34	Haß	Hass	NOUN	NN	Gender=Masc|Number=Sing|Person=3	39	obl	_	_
+35	gegen	gegen	ADP	APPR	AdpType=Prep|Case=Acc	37	case	_	_
+36	alles	all	DET	PIDAT	Case=Acc|Gender=Neut|Number=Sing|Person=3	37	det	_	_
+37	Revolutionäre	Revolutionär	NOUN	NN	Degree=Pos|Gender=Neut|Number=Sing|Person=3	34	nmod	_	_
+38	gewaltsam	gewaltsam	ADJ	ADJD	Degree=Pos|Variant=Short	39	advmod	_	_
+39	auszeichnete	auszeichnen	VERB	VVFIN	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	30	conj	_	_
+40	.	.	PUNCT	$.	PunctType=Peri	11	punct	_	_

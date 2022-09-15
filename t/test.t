@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 41;
+use Test::More tests => 44;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -181,4 +181,16 @@ if ($UNZIP eq '') {
 $zipcontent = `$UNZIP -c $zipfile`;
 unlike($zipcontent, qr/.*name ="lemma".*/, "conllu2korapxml igores _ lemmas.");
 like($zipcontent, qr/.*<f name="pos">NN|NN<\/f>.*/, "conllu2korapxml does not ignore pos for _ lemmas.");
+
+script_runs([ 'script/conllu2korapxml', 't/data/goe.ud.conllu' ], {stdout => \$zipcontent}, "Runs conllu2korap with UDPipe and unparsable comments");
+$zipfile = "$test_tempdir/goe.ud.zip";
+open($fh, ">", $zipfile) or fail("cannot open file $zipfile for writing");
+print $fh $zipcontent;
+close($fh);
+
+$zipcontent = `$UNZIP -l $zipfile`;
+like($zipcontent, qr@GOE/AGA/00000/ud/morpho.xml@, "conllu2korapxml UDPipe input conversion contains morpho layer with foundry name 'ud'");
+like($zipcontent, qr@GOE/AGA/00000/ud/dependency.xml@, "conllu2korapxml UDPipe input conversion contains dependency layer with foundry name 'ud'");
+
+
 done_testing;
