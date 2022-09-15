@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9f4d7e1c_af5f0253",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2022-09-15T09:45:37Z",
+      "side": 1,
+      "message": "Tests (and metadata- + XPosTag-pickup) missing",
+      "revId": "fd214618d666bbecc374521af91c49655f408421",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
