@@ -75,43 +75,54 @@ foreach my $conllu_file (@conllu_files) {
   my $i=0; my $s=0; my $first_in_sentence=0;
   my $lastDocSigle="";
   while (<$fh>) {
-    if(/^(?:#|0\.1)\s+filename\s*[:=]\s*(.*)/) {
-      $filename=$1;
-      if(!$first) {
-        closeDoc(0);
-      } else {
-        $first=0;
+    if(/^\s*(?:#|0\.\d)/) {
+      if(/^(?:#|0\.1)\s+filename\s*[:=]\s*(.*)/) {
+        $filename=$1;
+        if(!$first) {
+          closeDoc(0);
+        } else {
+          $first=0;
+        }
+        if($processedFilenames{$filename}) {
+          $log->warn("WARNING: $filename is already processed");
+        }
+        $processedFilenames{$filename}=1;
+        $i=0;
+      } elsif(/^#\s*foundry\s*[:=]\s*(.*)/) {
+        if(!$foundry_name) {
+          $foundry_name = $1;
+          $log->debug("Foundry: $foundry_name\n");
+        } else {
+          $log->debug("Ignored foundry name: $1\n");
+        }
+      } elsif(/^#\s*generator\s*[=]\s*udpipe/i) {
+        if(!$foundry_name) {
+          $foundry_name = "ud";
+          $log->debug("Foundry: $foundry_name\n");
+        } else {
+          $log->debug("Ignored foundry name: $1\n");
+        }
+      } elsif(/^(?:#|0\.2)\s+.*id\s*[:=]\s*(.*)/) {
+        $docid=$1;
+        my $docSigle = $docid;
+        $docSigle =~ s/\..*//;
+        if($docSigle ne $lastDocSigle) {
+          $log->info("Analyzing $docSigle");
+          $lastDocSigle = $docSigle;
+        }
+        $known=$unknown=0;
+        $current="";
+        $parser_file = dirname($filename);
+        $parser_file =~ s@(.*)/[^/]+$@$1@;
+        $morpho_file = $parser_file;
+        $morpho_file .= "/$foundry_name/morpho.xml";
+        $parser_file .= "/$foundry_name/dependency.xml";
+        $parse = $morpho = layer_header($docid);
+      }  elsif (/^(?:#|0\.3)\s+(?:start_offsets|from)\s*[:=]\s*(.*)/) {
+        @spansFrom = split(/\s+/, $1);
+      }  elsif (/^(?:#|0\.4)\s+(?:end_offsets|to)\s+[:=]\s*(.*)/) {
+        @spansTo = split(/\s+/, $1);
       }
-      if($processedFilenames{$filename}) {
-        $log->warn("WARNING: $filename is already processed");
-      }
-      $processedFilenames{$filename}=1;
-      $i=0;
-    } elsif(/^#\s*foundry\s*[:=]\s*(.*)/) {
-      if(!$foundry_name) {
-        $foundry_name = $1;
-        $log->debug("Foundry: $foundry_name\n");
-      }
-    } elsif(/^(?:#|0\.2)\s+.*id\s*[:=]\s*(.*)/) {
-      $docid=$1;
-      my $docSigle = $docid;
-      $docSigle =~ s/\..*//;
-      if($docSigle ne $lastDocSigle) {
-        $log->info("Analyzing $docSigle");
-        $lastDocSigle = $docSigle;
-      }
-      $known=$unknown=0;
-      $current="";
-      $parser_file = dirname($filename);
-      $parser_file =~ s@(.*)/[^/]+$@$1@;
-      $morpho_file = $parser_file;
-      $morpho_file .= "/$foundry_name/morpho.xml";
-      $parser_file .= "/$foundry_name/dependency.xml";
-      $parse = $morpho = layer_header($docid);
-    }  elsif (/^(?:#|0\.3)\s+(?:start_offsets|from)\s*[:=]\s*(.*)/) {
-      @spansFrom = split(/\s+/, $1);
-    }  elsif (/^(?:#|0\.4)\s+(?:end_offsets|to)\s+[:=]\s*(.*)/) {
-      @spansTo = split(/\s+/, $1);
     } elsif (! /^\s*$/) {
       my @parsed=split('\t');
       chomp  $parsed[9];
