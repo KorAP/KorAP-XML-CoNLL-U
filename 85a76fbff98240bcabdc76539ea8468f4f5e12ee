@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "603ad1c0_a2c8ab75",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2022-09-27T15:05:47Z",
+      "side": 1,
+      "message": "Only makes sense in combination with https://korap.ids-mannheim.de/gerrit/c/KorAP/KorAP-XML-CoNLL-U/+/6088",
+      "revId": "85a76fbff98240bcabdc76539ea8468f4f5e12ee",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
