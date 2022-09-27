@@ -102,7 +102,7 @@ foreach my $conllu_file (@conllu_files) {
         } else {
           $log->debug("Ignored foundry name: ud\n");
         }
-      } elsif(/^(?:#|0\.2)\s+.*id\s*[:=]\s*(.*)/) {
+      } elsif(/^(?:#|0\.2)\s+text_id\s*[:=]\s*(.*)/) {
         $docid=$1;
         my $docSigle = $docid;
         $docSigle =~ s/\..*//;
@@ -124,9 +124,13 @@ foreach my $conllu_file (@conllu_files) {
         @spansTo = split(/\s+/, $1);
       }
     } elsif (! /^\s*$/) {
+      if (!$docid || scalar @spansTo == 0 || scalar @spansFrom == 0) {
+        $log->warn("WARNING: No valid input document");
+        next;
+      };
       my @parsed=split('\t');
       chomp  $parsed[9];
-      if(@parsed != 10) {
+      if (@parsed != 10) {
         $log->warn("WARNING: skipping strange parser output line in $docid");
         $i++;
         next;
@@ -175,7 +179,7 @@ foreach my $conllu_file (@conllu_files) {
   }
   $current .= "\n";
   closeDoc(1);
-  $zip->close();
+  $zip->close() if $zip;
   close($fh);
 }
 exit;
@@ -194,11 +198,11 @@ sub newZipStream {
 }
 
 sub closeDoc {
-  if ($write_morpho) {
+  if ($write_morpho && $morpho_file) {
     newZipStream($morpho_file);
     $zip->print($morpho, qq( </spanList>\n</layer>\n));
   }
-  if ($write_syntax) {
+  if ($write_syntax && $parser_file) {
     $write_syntax = 0;
     newZipStream($parser_file);
     $zip->print($parse, qq(</spanList>\n</layer>\n));
