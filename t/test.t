@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 41;
+use Test::More tests => 43;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -181,4 +181,8 @@ if ($UNZIP eq '') {
 $zipcontent = `$UNZIP -c $zipfile`;
 unlike($zipcontent, qr/.*name ="lemma".*/, "conllu2korapxml igores _ lemmas.");
 like($zipcontent, qr/.*<f name="pos">NN|NN<\/f>.*/, "conllu2korapxml does not ignore pos for _ lemmas.");
+
+script_runs([ 'script/conllu2korapxml', 't/data/deu-deps.conllu' ], "Runs conllu2korap with UDPipe input");
+script_stderr_unlike "fileparse(): need a valid pathname", "Ignore sent_id and newdoc id";
+
 done_testing;

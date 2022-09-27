@@ -92,7 +92,7 @@ foreach my $conllu_file (@conllu_files) {
         $foundry_name = $1;
         $log->debug("Foundry: $foundry_name\n");
       }
-    } elsif(/^(?:#|0\.2)\s+.*id\s*[:=]\s*(.*)/) {
+    } elsif(/^(?:#|0\.2)\s*text_id\s*[:=]\s*(.*)/) {
       $docid=$1;
       my $docSigle = $docid;
       $docSigle =~ s/\..*//;
