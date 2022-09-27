@@ -74,7 +74,7 @@ foreach my $conllu_file (@conllu_files) {
   }
   my $i=0; my $s=0; my $first_in_sentence=0;
   my $lastDocSigle="";
-  while (<$fh>) {
+  MAIN: while (<$fh>) {
     if(/^\s*(?:#|0\.\d)/) {
       if(/^(?:#|0\.1)\s+filename\s*[:=]\s*(.*)/) {
         $filename=$1;
@@ -102,7 +102,7 @@ foreach my $conllu_file (@conllu_files) {
         } else {
           $log->debug("Ignored foundry name: ud\n");
         }
-      } elsif(/^(?:#|0\.2)\s+.*id\s*[:=]\s*(.*)/) {
+      } elsif(/^(?:#|0\.2)\s+text_id\s*[:=]\s*(.*)/) {
         $docid=$1;
         my $docSigle = $docid;
         $docSigle =~ s/\..*//;
@@ -123,10 +123,23 @@ foreach my $conllu_file (@conllu_files) {
       }  elsif (/^(?:#|0\.4)\s+(?:end_offsets|to)\s+[:=]\s*(.*)/) {
         @spansTo = split(/\s+/, $1);
       }
-    } elsif (! /^\s*$/) {
+    } elsif ( !/^\s*$/ ) {
+      if ( !$docid || scalar @spansTo == 0 || scalar @spansFrom == 0 ) {
+        if ( !$docid ) {
+          $log->warn("WARNING: No valid input document: text_id (e.g. '# text_id = GOE_AGA.00000') missing");
+        }
+        if ( scalar @spansTo == 0 || scalar @spansFrom == 0 ) {
+          $log->warn("WARNING: No valid input document: token offsets missing");
+        }
+
+        # Skip to next potentially valid document
+        while (<$fh>) {
+          next MAIN if m!^\s*$!s;
+        }
+      };
       my @parsed=split('\t');
       chomp  $parsed[9];
-      if(@parsed != 10) {
+      if (@parsed != 10) {
         $log->warn("WARNING: skipping strange parser output line in $docid");
         $i++;
         next;
@@ -175,7 +188,7 @@ foreach my $conllu_file (@conllu_files) {
   }
   $current .= "\n";
   closeDoc(1);
-  $zip->close();
+  $zip->close() if $zip;
   close($fh);
 }
 exit;
@@ -194,11 +207,11 @@ sub newZipStream {
 }
 
 sub closeDoc {
-  if ($write_morpho) {
+  if ($write_morpho && $morpho_file) {
     newZipStream($morpho_file);
     $zip->print($morpho, qq( </spanList>\n</layer>\n));
   }
-  if ($write_syntax) {
+  if ($write_syntax && $parser_file) {
     $write_syntax = 0;
     newZipStream($parser_file);
     $zip->print($parse, qq(</spanList>\n</layer>\n));

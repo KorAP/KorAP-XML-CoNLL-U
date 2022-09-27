@@ -6,7 +6,7 @@
         - conllu2korapxml: ignore _-lemmas
         - conllu2korapxml: handle UDPipe comments
         - conllu2korapxml: ignore non-interpretable comments
-
+        - connlu2korapxml: Improve error handling for missing text ids and offsets
 
 0.4.1 2021-07-31
         - korapxml2conllu: fix patterns not extracted for last texts in archive
