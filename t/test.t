@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 46;
+use Test::More tests => 48;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -195,5 +195,7 @@ $zipcontent = `$UNZIP -l $zipfile`;
 like($zipcontent, qr@GOE/AGA/00000/ud/morpho\.xml@, "conllu2korapxml UDPipe input conversion contains morpho layer with foundry name 'ud'");
 like($zipcontent, qr@GOE/AGA/00000/ud/dependency\.xml@, "conllu2korapxml UDPipe input conversion contains dependency layer with foundry name 'ud'");
 
+script_runs([ 'script/conllu2korapxml', 't/data/deu-deps.conllu' ], "Runs conllu2korap with UDPipe input");
+script_stderr_unlike "fileparse(): need a valid pathname", "Ignore sent_id and newdoc id";
 
 done_testing;
