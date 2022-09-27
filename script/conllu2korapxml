@@ -102,7 +102,7 @@ foreach my $conllu_file (@conllu_files) {
         } else {
           $log->debug("Ignored foundry name: ud\n");
         }
-      } elsif(/^(?:#|0\.2)\s+.*id\s*[:=]\s*(.*)/) {
+      } elsif(/^(?:#|0\.2)\s+text_id\s*[:=]\s*(.*)/) {
         $docid=$1;
         my $docSigle = $docid;
         $docSigle =~ s/\..*//;
