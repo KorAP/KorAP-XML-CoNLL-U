@@ -16,6 +16,24 @@
       "message": "Only makes sense in combination with https://korap.ids-mannheim.de/gerrit/c/KorAP/KorAP-XML-CoNLL-U/+/6088",
       "revId": "85a76fbff98240bcabdc76539ea8468f4f5e12ee",
       "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3bc1196f_1bbd490a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2022-09-27T16:38:06Z",
+      "side": 1,
+      "message": "Then let\u0027s merge https://korap.ids-mannheim.de/gerrit/c/KorAP/KorAP-XML-CoNLL-U/+/6088 first, I guess.",
+      "parentUuid": "603ad1c0_a2c8ab75",
+      "revId": "85a76fbff98240bcabdc76539ea8468f4f5e12ee",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
     }
   ]
 }
