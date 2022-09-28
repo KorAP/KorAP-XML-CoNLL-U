@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "029daabc_5aa859ba",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2022-09-28T11:12:09Z",
+      "side": 1,
+      "message": "Maybe having better error handling is the way to go.",
+      "revId": "0341caa7d9ef8d06f70b704675497aea12059211",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
