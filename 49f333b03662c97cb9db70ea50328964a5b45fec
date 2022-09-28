@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "debcb45d_16ff58d7",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2022-09-28T16:01:01Z",
+      "side": 1,
+      "message": "Read an article about constructive error messages on Medium Daily this morning...",
+      "revId": "49f333b03662c97cb9db70ea50328964a5b45fec",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
