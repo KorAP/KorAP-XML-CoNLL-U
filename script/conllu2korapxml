@@ -14,7 +14,7 @@ my $_COMPRESSION_METHOD = ZIP_CM_DEFLATE;
 my %opts;
 my %processedFilenames;
 
-our $VERSION = '0.4.1.9000';
+our $VERSION = '0.5.0';
 our $VERSION_MSG = "\nconllu2korapxml - v$VERSION\n";
 
 use constant {

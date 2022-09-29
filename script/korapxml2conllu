@@ -26,7 +26,7 @@ my @extract_metadata_regex;
 
 my $lm_training_data = 0;
 
-our $VERSION = '0.4.1.9000';
+our $VERSION = '0.5.0';
 
 our $VERSION_MSG = "\nkorapxml2conllu - v$VERSION\n";
 
