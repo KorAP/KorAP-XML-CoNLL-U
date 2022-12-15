@@ -1,3 +1,6 @@
+        - korapxml2conllu:
+            - handle docid attributes correctly if they are in a different line than there parent element layer
+
 0.5.0 2022-09-29
         - korapxml2conllu:
             - --word2vec|lm-training-data option added to print word2vec input format
