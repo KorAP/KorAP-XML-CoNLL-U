@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 50;
+use Test::More tests => 53;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -200,4 +200,7 @@ script_stderr_unlike "fileparse(): need a valid pathname", "Ignore sent_id and n
 script_stderr_like "WARNING: No valid input document.*token offsets missing", "Warn on missing token offsets";
 script_stderr_like qr@WARNING: No valid input document.*text.id .*missing@,   "Warn on missing text ids";
 
+script_runs([ 'script/korapxml2conllu', "t/data/nkjp.zip" ], "Runs korapxml2conllu on nkjp test data");
+script_stderr_unlike("Use of uninitialized value", "Handle lonely docid parameters (line separated from layer elements)");
+script_stdout_like("\n9\twesołości\twesołość\tsubst\tsubst\tsg:gen:f", "Correctly convert nkjp annotations");
 done_testing;
