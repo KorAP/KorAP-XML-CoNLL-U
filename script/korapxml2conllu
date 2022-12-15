@@ -159,7 +159,7 @@ foreach my $morpho_zip (@ARGV) {
         }
         $filename=$1 if(!eof(MORPHO_OR_TOKENPIPE) && /\s+inflating:\s+(.*)/);
       }
-    } elsif(m@^\s*<layer\s+.*docid="([^"]+)"@) {
+    } elsif(m@(?:^|\s)docid="([^"]+)"@) {
       last if($test && $text_no++ > 3);
       if(!$first) {
         closeDoc(0);
@@ -340,8 +340,11 @@ sub fetch_plaintext {
       $docid=$1;
       $log->debug("Getting plain text for $docid");
       $text_started=0;
-    } elsif(/<layer[^>]+docid="([^"]*)/) {
+    } elsif(/<raw_text\b/) {
+      $text_started=0;
+    } elsif(/(?:^|\s)docid="([^"]*)/) {
       $docid=$1;
+      $log->debug("Getting plain text for $docid");
     } elsif(m@<span @) {
         ($current_id) = /id="[^0-9]*([^\"]*)"/;
         ($current_from) = /from="([^\"]*)"/;
