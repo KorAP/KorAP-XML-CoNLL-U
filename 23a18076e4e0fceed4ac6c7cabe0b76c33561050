@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6f6ecadb_856366f2",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2022-12-16T17:30:17Z",
+      "side": 1,
+      "message": "This, I guess, will help to identify the same offset errors as korapxml2krill.",
+      "revId": "23a18076e4e0fceed4ac6c7cabe0b76c33561050",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
