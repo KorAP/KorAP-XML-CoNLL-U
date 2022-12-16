@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 59;
+use Test::More tests => 61;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -211,5 +211,8 @@ script_stdout_unlike("NKJP/NKJP/KolakowskiOco/nkjp/morpho.xml", "--sigle-pattern
 script_runs([ 'script/korapxml2conllu', "--sigle-pattern", "13072", "t/data/wdf19.tree_tagger.zip" ], "Runs korapxml2conllu with --sigle-pattern option on seprate base/morpho files");
 script_stdout_like("WDF19/A0000/13072/tree_tagger/morpho.xml", "--sigle-pattern to specify a text sigle pattern extracts the right texts");
 script_stdout_unlike("WDF19/A0000/14247/tree_tagger/morpho.xml", "--sigle-pattern to specify a text sigle pattern does not extract the wrong texts");
+
+script_runs([ 'script/korapxml2conllu', "t/data/nkjp-fail.zip" ], "Runs korapxml2conllu on nkjp-fail test data");
+script_stderr_like("could not retrieve token at 1297-1298/ 1297  - ending with:  e! upadku.", "Offset error");
 
 done_testing;

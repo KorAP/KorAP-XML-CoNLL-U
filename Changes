@@ -1,6 +1,7 @@
         - korapxml2conllu:
             - the sigle-pattern option now affects the entire sigle
             - handle docid attributes correctly if they are in a different line than their parent element <layer>
+            - Improve identification of offset errors
 
 0.5.0 2022-09-29
         - korapxml2conllu:
