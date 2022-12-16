@@ -126,16 +126,16 @@ foreach my $morpho_zip (@ARGV) {
     $zip_content_pattern = "[sdh][tae]*";
   }
   if (!$baseOnly) {
-    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*/${sigle_pattern}*/*/*/morpho.xml' $zipsiglepattern |";
+    $morphoOrTokenCommand = "$UNZIP -c $morpho_zip '*${sigle_pattern}*/morpho.xml' $zipsiglepattern |";
     if ($extract_attributes_regex || !$s_bounds_from_morpho) {
-      $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/$zip_content_pattern.xml' $zipsiglepattern |";
+      $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*${sigle_pattern}*/$zip_content_pattern.xml' $zipsiglepattern |";
     } else {
       $log->debug("Not reading structure information.");
-      $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*/${sigle_pattern}*/*/data.xml' $zipsiglepattern |";
+      $plaintextAndStructureCommand = "$UNZIP -c $data_zip '*${sigle_pattern}*/data.xml' $zipsiglepattern |";
     }
   } else {
     $foundry = "base";
-    $morphoOrTokenCommand = "$UNZIP -l $morpho_zip '*/${sigle_pattern}*/*/*/morpho.xml' $zipsiglepattern";
+    $morphoOrTokenCommand = "$UNZIP -l $morpho_zip '*${sigle_pattern}*/morpho.xml' $zipsiglepattern";
     if (`$morphoOrTokenCommand` !~ /morpho\.xml/) {
       $morphoOrTokenCommand =~ s/morpho\.xml/tokens.xml/;
     } else {
@@ -143,8 +143,11 @@ foreach my $morpho_zip (@ARGV) {
     }
     $morphoOrTokenCommand =~ s/-l/-c/;
     $morphoOrTokenCommand .= ' |';
-    $plaintextAndStructureCommand = "$UNZIP -c $data_zip " . "'*/${sigle_pattern}*/*/$zip_content_pattern.xml' " . "$zipsiglepattern |";
+    $plaintextAndStructureCommand = "$UNZIP -c $data_zip " . "'*${sigle_pattern}*/$zip_content_pattern.xml' " . "$zipsiglepattern |";
   }
+
+  $log->debug("command to extract annotation and/or tokenization: $morphoOrTokenCommand");
+  $log->debug("command to extract plain text and structure: $plaintextAndStructureCommand");
 
   open (MORPHO_OR_TOKENPIPE, $morphoOrTokenCommand) or die "cannot unzip $morpho_zip";
   open (PLAINTEXTPIPE, $plaintextAndStructureCommand) or die "cannot unzip $data_zip";
