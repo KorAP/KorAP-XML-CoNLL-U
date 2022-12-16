@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 53;
+use Test::More tests => 59;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -203,4 +203,13 @@ script_stderr_like qr@WARNING: No valid input document.*text.id .*missing@,   "W
 script_runs([ 'script/korapxml2conllu', "t/data/nkjp.zip" ], "Runs korapxml2conllu on nkjp test data");
 script_stderr_unlike("Use of uninitialized value", "Handles lonely docid parameters (line separated from layer elements)");
 script_stdout_like("\n9\twesołości\twesołość\tsubst\tsubst\tsg:gen:f", "Correctly converts nkjp annotations");
+
+script_runs([ 'script/korapxml2conllu', "--sigle-pattern", "KOT", "t/data/nkjp.zip" ], "Runs korapxml2conllu with --sigle-pattern option on combined base/morpho files");
+script_stdout_like("NKJP/NKJP/KOT/nkjp/morpho.xml", "--sigle-pattern to specify a doc sigle pattern extracts the right texts");
+script_stdout_unlike("NKJP/NKJP/KolakowskiOco/nkjp/morpho.xml", "--sigle-pattern to specify a doc sigle pattern does not extract the wrong texts");
+
+script_runs([ 'script/korapxml2conllu', "--sigle-pattern", "13072", "t/data/wdf19.tree_tagger.zip" ], "Runs korapxml2conllu with --sigle-pattern option on seprate base/morpho files");
+script_stdout_like("WDF19/A0000/13072/tree_tagger/morpho.xml", "--sigle-pattern to specify a text sigle pattern extracts the right texts");
+script_stdout_unlike("WDF19/A0000/14247/tree_tagger/morpho.xml", "--sigle-pattern to specify a text sigle pattern does not extract the wrong texts");
+
 done_testing;
