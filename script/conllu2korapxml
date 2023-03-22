@@ -50,7 +50,7 @@ $log->notice('Debugging is activated') if DEBUG;
 
 my $docid="";
 my $zip = undef;
-my $outh = \*STDOUT;
+my $outh = '-';
 my $parser_file;
 my $parse;
 my $morpho_file;
