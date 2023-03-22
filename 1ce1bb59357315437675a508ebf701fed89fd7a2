@@ -33,6 +33,23 @@
       "message": "Actually https://korap.ids-mannheim.de/gerrit/c/KorAP/KorAP-XML-CoNLL-U/+/6783 should be the correct fix. Nonetheless this change is more idiomatic.",
       "revId": "1ce1bb59357315437675a508ebf701fed89fd7a2",
       "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d3b5caf7_7bef7986",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2023-03-22T10:46:41Z",
+      "side": 1,
+      "message": "Wow, I didn´t know that this works",
+      "revId": "1ce1bb59357315437675a508ebf701fed89fd7a2",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
     }
   ]
 }
