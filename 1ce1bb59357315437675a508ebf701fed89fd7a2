@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cd5abf15_32bf019b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2023-03-22T07:25:21Z",
+      "side": 1,
+      "message": "I don\u0027t know if this changes the behaviour to STDOUT in a meaningful way, but it\u0027s probably more idiomatic to the module.\nThe writing into the Zip seems to be not strictly streaming (because it tries to seek), so maybe there is some magic involved with the dash (like a buffer).\n\nOther solutions to make this more Docker-friendly:\n- Writing into a buffer. This is probably not the best solution for very large files, but at least it works.\n- Accepting an output file.",
+      "revId": "1ce1bb59357315437675a508ebf701fed89fd7a2",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
