@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2475694c_2755c45f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2023-03-22T10:02:08Z",
+      "side": 1,
+      "message": "Actually that was the probably the bug. The behaviour than would be in line with tei2korapxml.",
+      "revId": "5bc88598c58fe50e5baff6f6a160d6abba1ef565",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
