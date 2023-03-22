@@ -1,3 +1,7 @@
+0.6.1 2023-03-22
+        - conllu2korapxml:
+            - Fix append for filehandle output.
+
 0.6.0 2023-01-13
         - korapxml2conllu:
             - the sigle-pattern option now affects the entire sigle

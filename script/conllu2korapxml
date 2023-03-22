@@ -14,7 +14,7 @@ my $_COMPRESSION_METHOD = ZIP_CM_DEFLATE;
 my %opts;
 my %processedFilenames;
 
-our $VERSION = '0.6.0';
+our $VERSION = '0.6.1';
 our $VERSION_MSG = "\nconllu2korapxml - v$VERSION\n";
 
 use constant {
@@ -201,7 +201,7 @@ sub newZipStream {
         or die "ERROR ('$fname'): zip failed: $ZipError\n";
   } else {
     $zip = new IO::Compress::Zip $outh, Zip64 => 1, TextFlag => 1,
-        Method => $_COMPRESSION_METHOD, Append => 1, Name => "$fname"
+        Method => $_COMPRESSION_METHOD, Append => 0, Name => "$fname"
         or die "ERROR ('$fname'): zip failed: $ZipError\n";
   }
 }
