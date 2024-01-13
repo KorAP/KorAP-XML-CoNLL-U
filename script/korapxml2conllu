@@ -233,7 +233,6 @@ foreach my $morpho_zip (@ARGV) {
         } else {
           $current .= join("\t", @conll[0..$columns-1]) . "\n"; # conll columns
         }
-        fetch_plaintext($docid);
         if ($sentence_ends{$docid}{$current_to}) {
           $log->debug("Using sentence end for $docid \@$current_to");
           $current .= "\n";
