@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-use v5.16;
+use v5.36;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -25,6 +25,6 @@ WriteMakefile(
         'Log::Any'          => '1.708',
         'IO::Compress::Zip' => '2.091'
     },
-    MIN_PERL_VERSION => '5.016',
+    MIN_PERL_VERSION => '5.036',
     EXE_FILES        => [ './script/korapxml2conllu', './script/conllu2korapxml' ]
 );
