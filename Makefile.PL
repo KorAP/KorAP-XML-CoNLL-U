@@ -25,6 +25,6 @@ WriteMakefile(
         'Log::Any'          => '1.708',
         'IO::Compress::Zip' => '2.091'
     },
-    MIN_PERL_VERSION => '5.016',
+    MIN_PERL_VERSION => '5.36',
     EXE_FILES        => [ './script/korapxml2conllu', './script/conllu2korapxml' ]
 );
