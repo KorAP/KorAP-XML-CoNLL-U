@@ -23,7 +23,6 @@ WriteMakefile(
         'Getopt::Std'       => 0,
         'Getopt::Long'      => 0,
         'Log::Any'          => '1.708',
-        'Encode'            => "3.07",
         'IO::Compress::Zip' => '2.091'
     },
     MIN_PERL_VERSION => '5.016',

@@ -6,7 +6,6 @@ use Log::Any '$log';
 use Log::Any::Adapter;
 use Pod::Usage;
 use Getopt::Long qw(GetOptions :config no_auto_abbrev);
-use Encode;
 
 my $MAX_SENTENCE_LENGTH=10000;
 my $COMMENT_START="#";
@@ -34,6 +33,8 @@ use constant {
   # Set to 1 for minimal more debug output (no need to be parametrized)
   DEBUG => $ENV{KORAPXMLCONLLU_DEBUG} // 0
 };
+
+use open ':std', ':encoding(UTF-8)';
 
 GetOptions(
   'sigle-pattern|p=s'            => \(my $sigle_pattern = ''),
@@ -221,7 +222,7 @@ foreach my $morpho_zip (@ARGV) {
       }
       $token=~s/[\t\n\r]//g; # make sure that tokens never contain tabs or newlines
       @conll = ("_") x 10;
-      $conll[$FORM_idx] = encode("utf-8", $token);
+      $conll[$FORM_idx] = $token;
       if($baseOnly) {
         my @vals = ($current_from, $current_to);
 #        $log->debug("joining : ", join(" ", @vals));
@@ -291,11 +292,11 @@ sub printTokenRanges {
   return if(!$offsets);
   print "$COMMENT_START start_offsets = ", $current_lines[0]->[0];
   foreach my $t (@current_lines) {
-    print STDOUT " $t->[0]";
+    print " $t->[0]";
   }
   print "$COMMENT_END\n$COMMENT_START end_offsets = ", $current_lines[$#current_lines]->[1] if($comments);
   foreach my $t (@current_lines) {
-    print STDOUT " $t->[1]";
+    print " $t->[1]";
   }
   print "$COMMENT_END\n";
 }
@@ -308,7 +309,7 @@ sub closeDoc {
     chomp $current;
     $current .= "\n\n";
     printTokenRanges();
-    print STDOUT $current;
+    print $current;
   }
 }
 
@@ -373,7 +374,7 @@ sub fetch_plaintext {
         }
       }
     } elsif (m@<text>(.*)</text>@) {
-      $_= decode("utf-8", $1, Encode::FB_DEFAULT);
+      $_= $1;
       s/&lt;/</go;
       s/&gt;/>/go;
       s/&amp;/&/go;
@@ -381,7 +382,7 @@ sub fetch_plaintext {
       $plain_texts{$docid} = $_;
       last if(!$extract_attributes_regex && ($text_count++ > 1 && $plain_texts{$target_id} && (!$extract_metadata || $metadata{$target_id})));
     } elsif (m@<text>(.*)@) {
-      $_= decode("utf-8", $1, Encode::FB_DEFAULT);
+      $_= $1;
       s/&lt;/</go;
       s/&gt;/>/go;
       s/&amp;/&/go;
@@ -389,7 +390,7 @@ sub fetch_plaintext {
       $plain_texts{$docid} = "$_ ";
       $text_started=1;
     } elsif ($text_started && m@(.*)</text>@) {
-      $_= decode("utf-8", $1, Encode::FB_DEFAULT);
+      $_= $1;
       s/&lt;/</go;
       s/&gt;/>/go;
       s/&amp;/&/go;
@@ -399,7 +400,6 @@ sub fetch_plaintext {
       last if(!$extract_attributes_regex && ($text_count++ > 1 && $plain_texts{$target_id} && (!$extract_metadata || $metadata{$target_id})));
     } elsif ($text_started) {
       chomp;
-      $_ = decode("utf-8", $_, Encode::FB_DEFAULT) . ' ';
       s/&lt;/</go;
       s/&gt;/>/go;
       s/&amp;/&/go;
@@ -416,7 +416,7 @@ sub fetch_plaintext {
     } else {
       $log->debug("Using $docid");
     }
-  } 
+  }
   return(1);
 }
 
