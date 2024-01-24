@@ -1,3 +1,8 @@
+0.6.2 2024-01-24
+        - Bump minimal perl version to 5.36 to improve unicode handling.
+        - korapxml2conllu
+            - Use implicit default utf8 encoding instead of explicit de/encodes. Speeds up processing by 10%.
+
 0.6.1 2023-03-22
         - conllu2korapxml:
             - Fix append for filehandle output.

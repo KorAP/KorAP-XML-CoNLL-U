@@ -150,7 +150,7 @@ WDF19/A0000.10894	2014.08.28	wikipedia ce prete parfaitement à ce genre de decr
 
 * [Marc Kupietz](https://www.ids-mannheim.de/digspra/personal/kupietz.html)
 
-Copyright (c) 2021, [Leibniz Institute for the German Language](http://www.ids-mannheim.de/), Mannheim, Germany
+Copyright (c) 2024, [Leibniz Institute for the German Language](http://www.ids-mannheim.de/), Mannheim, Germany
 
 This package is developed as part of the [KorAP](http://korap.ids-mannheim.de/)
 Corpus Analysis Platform at the Leibniz Institute for German Language
