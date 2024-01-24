@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "dec2daf3_0cb54cba",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2024-01-24T12:05:01Z",
+      "side": 1,
+      "message": "I\u0027d increase only the minor version here.",
+      "revId": "f5d7dcc6a9656b955ed06cf3b94fc3603fed532c",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
