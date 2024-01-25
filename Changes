@@ -1,3 +1,9 @@
+0.6.2 2024-01-25
+        - Minimum required Perl is now 5.36
+        - korapxml2conllu:
+            - Remove redundant fetch plaintext
+            - Switch to implicit default utf8 encoding
+
 0.6.1 2023-03-22
         - conllu2korapxml:
             - Fix append for filehandle output.
