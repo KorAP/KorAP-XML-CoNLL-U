@@ -16,6 +16,24 @@
       "message": "Already there: https://korap.ids-mannheim.de/gerrit/c/KorAP/KorAP-XML-CoNLL-U/+/8025",
       "revId": "d67fbd298deda99f83c0b7de05fdc164302d6c15",
       "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1253583c_f1e0c360",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2024-01-25T14:34:36Z",
+      "side": 1,
+      "message": "Sorry - missed that ...",
+      "parentUuid": "e95aab4a_c0eac4a3",
+      "revId": "d67fbd298deda99f83c0b7de05fdc164302d6c15",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
     }
   ]
 }
