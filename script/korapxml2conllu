@@ -156,12 +156,16 @@ foreach my $morpho_zip (@ARGV) {
   while (<MORPHO_OR_TOKENPIPE>) {
     if (/^  inflating: (.*)/) {
       $filename=$1;
+      $filename =~ s/^\s+|\s+$//g;
       while($processedFilenames{$filename} && !eof(MORPHO_OR_TOKENPIPE)) {
         $log->warn("$filename already processed");
         while (<MORPHO_OR_TOKENPIPE>) {
           last if(/\s+inflating:\s+(.*)/);
         }
-        $filename=$1 if(!eof(MORPHO_OR_TOKENPIPE) && /\s+inflating:\s+(.*)/);
+        if(!eof(MORPHO_OR_TOKENPIPE) && /\s+inflating:\s+(.*)/) {
+          $filename=$1;
+          $filename =~ s/^\s+|\s+$//g;
+        }
       }
     } elsif(m@(?:^|\s)docid="([^"]+)"@) {
       last if($test && $text_no++ > 3);
