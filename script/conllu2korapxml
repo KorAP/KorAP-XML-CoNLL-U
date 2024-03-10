@@ -137,7 +137,13 @@ foreach my $conllu_file (@conllu_files) {
           next MAIN if m!^\s*$!s;
         }
       };
-      my @parsed=split('\t');
+      my @parsed = map {
+        my $s = $_;
+        $s =~ s/&/&amp;/g;
+        $s =~ s/</&lt;/g;
+        $s =~ s/>/&gt;/g;
+        $s;
+      } split('\t');
       chomp  $parsed[9];
       if (@parsed != 10) {
         $log->warn("WARNING: skipping strange parser output line in $docid");
