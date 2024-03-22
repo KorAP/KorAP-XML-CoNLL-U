@@ -1,0 +1,100 @@
+# foundry = marmot dependency:malt
+# filename = GOE/AGA/00000/base/tokens.xml
+# text_id = GOE_AGA.00000
+# start_offsets = 0 0 9 12
+# end_offsets = 22 8 11 22
+1	Campagne	_	_	NN	case=nom|number=sg|gender=fem	0	ROOT 	_	_
+2	in	_	_	APPR	_	1	PP 	_	_
+3	Frankreich	_	_	NE	case=dat|number=sg|gender=neut	2	PN 	_	_
+
+# start_offsets = 23 23
+# end_offsets = 27 27
+1	1792	_	_	CARD	_	0	ROOT 	_	_
+
+# start_offsets = 28 28 33 37 40 44 53
+# end_offsets = 54 32 36 39 43 53 54
+1	auch	_	_	ADV	_	_	_	_	_
+2	ich	_	_	PPER	case=nom|number=sg|gender=*|person=1	_	_	_	_
+3	in	_	_	APPR	_	_	_	_	_
+4	der	_	_	ART	case=dat|number=sg|gender=fem	5	DET 	_	_
+5	Champagne	_	_	NE	case=dat|number=sg|gender=fem	3	PN 	_	_
+6	!	_	_	$.	_	5	-PUNCT- 	_	_
+
+# start_offsets = 55 55 59 63 70 75 82 87 94 102 105 111 120 124 130 134 140 144 151 153 163 175 187 191 207 209 213 218 222 239 248 255 259 264 267 271 277 283 297 307 319
+# end_offsets = 320 58 62 69 74 81 86 93 101 104 110 119 123 129 133 139 143 151 152 162 174 186 190 207 208 212 217 221 238 247 254 258 263 266 270 276 282 296 306 319 320
+1	den	_	_	ART	case=acc|number=sg|gender=masc	3	DET 	_	_
+2	23.	_	_	ADJA	case=acc|number=sg|gender=masc|degree=pos	3	ATTR 	_	_
+3	August	_	_	NN	case=acc|number=sg|gender=masc	11	NEB 	_	_
+4	1792	_	_	CARD	_	3	APP 	_	_
+5	gleich	_	_	ADV	_	11	ADV 	_	_
+6	nach	_	_	APPR	_	11	PP 	_	_
+7	meiner	_	_	PPOSAT	case=dat|number=sg|gender=fem	8	DET 	_	_
+8	Ankunft	_	_	NN	case=dat|number=sg|gender=fem	6	PN 	_	_
+9	in	_	_	APPR	_	8	PP 	_	_
+10	Mainz	_	_	NE	case=dat|number=sg|gender=neut	9	PN 	_	_
+11	besuchte	_	_	VVFIN	number=sg|person=1|tense=pres|mood=ind	0	ROOT 	_	_
+12	ich	_	_	PPER	case=nom|number=sg|gender=*|person=1	11	SUBJ 	_	_
+13	Herrn	_	_	NN	case=acc|number=sg|gender=masc	11	OBJA 	_	_
+14	von	_	_	APPR	_	13	PP 	_	_
+15	Stein	_	_	NN	case=dat|number=sg|gender=masc	14	PN 	_	_
+16	den	_	_	ART	case=dat|number=pl|gender=*	17	DET 	_	_
+17	älteren	_	_	NN	case=dat|number=pl|gender=*	15	GMOD 	_	_
+18	,	_	_	$,	_	17	-PUNCT- 	_	_
+19	königlich	_	_	ADJD	degree=pos	20	ADV 	_	_
+20	preußischen	_	_	ADJA	case=dat|number=sg|gender=masc|degree=pos	21	ATTR 	_	_
+21	Kammerherrn	_	_	NN	case=dat|number=sg|gender=masc	13	KON 	_	_
+22	und	_	_	KON	_	21	KON 	_	_
+23	Oberforstmeister	_	_	NN	case=nom|number=sg|gender=masc	22	CJ 	_	_
+24	,	_	_	$,	_	23	-PUNCT- 	_	_
+25	der	_	_	PRELS	case=nom|number=sg|gender=masc	30	SUBJ 	_	_
+26	eine	_	_	ART	case=acc|number=sg|gender=fem	27	DET 	_	_
+27	Art	_	_	NN	case=nom|number=sg|gender=fem	30	OBJA 	_	_
+28	Residentenstelle	_	_	NN	case=nom|number=sg|gender=fem	27	APP 	_	_
+29	daselbst	_	_	ADV	_	30	ADV 	_	_
+30	versah	_	_	VVFIN	number=sg|person=3|tense=past|mood=ind	13	REL 	_	_
+31	und	_	_	KON	_	30	KON 	_	_
+32	sich	_	_	PRF	case=acc|number=sg|person=3	39	OBJA 	_	_
+33	im	_	_	APPRART	case=dat|number=sg|gender=masc	39	PP 	_	_
+34	Haß	_	_	NN	case=dat|number=sg|gender=masc	33	PN 	_	_
+35	gegen	_	_	APPR	_	34	PP 	_	_
+36	alles	_	_	PIS	case=acc|number=sg|gender=neut	35	PN 	_	_
+37	Revolutionäre	_	_	NN	case=nom|number=pl|gender=masc	39	OBJA 	_	_
+38	gewaltsam	_	_	ADJD	degree=pos	39	ADV 	_	_
+39	auszeichnete	_	_	VVFIN	number=sg|person=3|tense=past|mood=ind	31	CJ 	_	_
+40	.	_	_	$.	_	39	-PUNCT- 	_	_
+
+# start_offsets = 321 321 324 335 339 343 354 360 364 375 388 392 404 409 411 415 422 427 431 437 444 448 464 470 474 485 487 495 501 504 513 515 521 525 531 532 545 546 548 560
+# end_offsets = 561 323 334 338 342 353 359 363 374 387 391 403 409 410 414 421 426 430 436 443 447 463 469 473 485 486 494 500 503 513 514 520 524 530 532 545 546 547 560 561
+1	er	_	_	PPER	case=nom|number=sg|gender=masc|person=3	2	SUBJ 	_	_
+2	schilderte	_	_	VVFIN	number=sg|person=3|tense=past|mood=ind	0	ROOT 	_	_
+3	mir	_	_	PPER	case=dat|number=sg|gender=*|person=1	2	OBJD 	_	_
+4	mit	_	_	APPR	_	2	PP 	_	_
+5	flüchtigen	_	_	ADJA	case=dat|number=pl|gender=masc|degree=pos	6	ATTR 	_	_
+6	Zügen	_	_	NN	case=dat|number=pl|gender=masc	4	PN 	_	_
+7	die	_	_	ART	case=acc|number=pl|gender=masc	9	DET 	_	_
+8	bisherigen	_	_	ADJA	case=acc|number=pl|gender=masc|degree=pos	9	ATTR 	_	_
+9	Fortschritte	_	_	NN	case=acc|number=pl|gender=masc	_	_	_	_
+10	der	_	_	ART	case=gen|number=sg|gender=fem	12	DET 	_	_
+11	verbündeten	_	_	ADJA	case=gen|number=sg|gender=fem|degree=pos	12	ATTR 	_	_
+12	Heere	_	_	NN	case=gen|number=sg|gender=fem	9	GMOD 	_	_
+13	,	_	_	$,	_	12	-PUNCT- 	_	_
+14	und	_	_	KON	_	9	KON 	_	_
+15	versah	_	_	VVFIN	number=sg|person=3|tense=past|mood=ind	14	CJ 	_	_
+16	mich	_	_	PPER	case=acc|number=sg|gender=*|person=1	15	OBJA 	_	_
+17	mit	_	_	APPR	_	15	PP 	_	_
+18	einem	_	_	ART	case=dat|number=sg|gender=masc	19	DET 	_	_
+19	Auszug	_	_	NN	case=dat|number=sg|gender=masc	17	PN 	_	_
+20	des	_	_	ART	case=gen|number=sg|gender=masc	22	DET 	_	_
+21	topographischen	_	_	ADJA	case=gen|number=sg|gender=masc|degree=pos	22	ATTR 	_	_
+22	Atlas	_	_	NN	case=gen|number=sg|gender=masc	19	GMOD 	_	_
+23	von	_	_	APPR	_	22	PP 	_	_
+24	Deutschland	_	_	NE	case=dat|number=sg|gender=neut	23	PN 	_	_
+25	,	_	_	$,	_	24	-PUNCT- 	_	_
+26	welchen	_	_	PWAT	case=acc|number=sg|gender=masc	27	DET 	_	_
+27	Jäger	_	_	NN	case=acc|number=sg|gender=masc	15	OBJA 	_	_
+28	zu	_	_	APPR	_	27	PP 	_	_
+29	Frankfurt	_	_	NE	case=dat|number=sg|gender=neut	28	PN 	_	_
+30	,	_	_	$,	_	29	-PUNCT- 	_	_
+31	unter	_	_	APPR	_	15	PP 	_	_
+32	dem	_	_	ART	case=dat|number=sg|gender=masc	33	DET 	_	_
+33	Titel	_	_	NN	case=dat|number=sg|gender=masc	31	PN 	_	_
