@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 61;
+use Test::More tests => 62;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -191,9 +191,10 @@ open($fh, ">", $zipfile) or fail("cannot open file $zipfile for writing");
 print $fh $zipcontent;
 close($fh);
 
-$zipcontent = `$UNZIP -l $zipfile`;
+$zipcontent = `$UNZIP -Z $zipfile`;
 like($zipcontent, qr@GOE/AGA/00000/ud/morpho\.xml@, "conllu2korapxml UDPipe input conversion contains morpho layer with foundry name 'ud'");
 like($zipcontent, qr@GOE/AGA/00000/ud/dependency\.xml@, "conllu2korapxml UDPipe input conversion contains dependency layer with foundry name 'ud'");
+like($zipcontent, qr@rw-rw-rw-.*GOE/AGA/00000/ud/morpho\.xml@, "KorAP-XML zip contents have read and write permissions");
 
 script_runs([ 'script/conllu2korapxml', 't/data/deu-deps.conllu' ], "Runs conllu2korap with UDPipe input");
 script_stderr_unlike "fileparse(): need a valid pathname", "Ignore sent_id and newdoc id";
