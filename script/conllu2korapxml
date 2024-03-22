@@ -66,6 +66,13 @@ my $first=1;
 my @conllu_files = @ARGV;
 push @conllu_files, "-" if (@conllu_files == 0);
 my $fh;
+
+my $dependency_foundry_name = $foundry_name;
+if ($foundry_name =~ /(.*) dependency:(.*)/) {
+  $foundry_name = $1;
+  $dependency_foundry_name = $2;
+}
+
 foreach my $conllu_file (@conllu_files) {
   if ($conllu_file eq '-') {
     $fh = \*STDIN;
@@ -90,14 +97,18 @@ foreach my $conllu_file (@conllu_files) {
         $i=0;
       } elsif(/^#\s*foundry\s*[:=]\s*(.*)/) {
         if(!$foundry_name) {
-          $foundry_name = $1;
+          $dependency_foundry_name = $foundry_name = $1;
+          if ($foundry_name =~ /(.*) dependency:(.*)/) {
+            $foundry_name = $1;
+            $dependency_foundry_name = $2;
+          } 
           $log->debug("Foundry: $foundry_name\n");
         } else {
           $log->debug("Ignored foundry name: $1\n");
         }
       } elsif(/^#\s*generator\s*[=]\s*udpipe/i) {
         if(!$foundry_name) {
-          $foundry_name = "ud";
+          $dependency_foundry_name = $foundry_name = "ud";
           $log->debug("Foundry: $foundry_name\n");
         } else {
           $log->debug("Ignored foundry name: ud\n");
@@ -116,7 +127,7 @@ foreach my $conllu_file (@conllu_files) {
         $parser_file =~ s@(.*)/[^/]+$@$1@;
         $morpho_file = $parser_file;
         $morpho_file .= "/$foundry_name/morpho.xml";
-        $parser_file .= "/$foundry_name/dependency.xml";
+        $parser_file .= "/$dependency_foundry_name/dependency.xml";
         $parse = $morpho = layer_header($docid);
       }  elsif (/^(?:#|0\.3)\s+(?:start_offsets|from)\s*[:=]\s*(.*)/) {
         @spansFrom = split(/\s+/, $1);
@@ -263,6 +274,7 @@ C<conllu2korapxml> converts CoNLL-U files that follow KorAP-specific comment con
 
 Set foundry name and ignore foundry names in the input.
 
+
 =item B<--help|-h>
 
 Print help information.
@@ -281,6 +293,8 @@ Loglevel for I<Log::Any>. Defaults to C<warn>.
 =head1 EXAMPLES
 
  conllu2korapxml -f tree_tagger < t/data/wdf19.morpho.conllu > wdf19.tree_tagger.zip
+
+ conllu2korapxml -f "tree_tagger dependency:malt" < t/data/wdf19.tt-malt.conllu > wdf19.tree_tagger.zip
 
 =head1 COPYRIGHT AND LICENSE
 
