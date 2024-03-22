@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 62;
+use Test::More tests => 68;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
@@ -215,5 +215,23 @@ script_stdout_unlike("WDF19/A0000/14247/tree_tagger/morpho.xml", "--sigle-patter
 
 script_runs([ 'script/korapxml2conllu', "t/data/nkjp-fail.zip" ], "Runs korapxml2conllu on nkjp-fail test data");
 script_stderr_like("could not retrieve token at 1297-1298/ 1297  - ending with:  e! upadku.", "Offset error");
+
+script_runs([ 'script/conllu2korapxml', 't/data/goe.marmot-malt.conllu' ], {stdout => \$zipcontent}, "Runs conllu2korap with marmot and malt annotations");
+$zipfile = "$test_tempdir/goe.marmalt.zip";
+open($fh, ">", $zipfile) or fail("cannot open file $zipfile for writing");
+print $fh $zipcontent;
+close($fh);
+$zipcontent = `$UNZIP -l $zipfile`;
+like($zipcontent, qr@GOE/AGA/00000/marmot/morpho\.xml@, "conllu2korapxml can handle different foundries for motpho and dependency layers");
+like($zipcontent, qr@GOE/AGA/00000/malt/dependency\.xml@, "conllu2korapxml sets the secondary dependency foundry correctly");
+
+script_runs([ 'script/conllu2korapxml',  '-f', 'upos dependency:gsd', 't/data/goe.ud.conllu' ], {stdout => \$zipcontent}, "Runs conllu2korap with marmot and malt annotations");
+$zipfile = "$test_tempdir/goe.marmalt.zip";
+open($fh, ">", $zipfile) or fail("cannot open file $zipfile for writing");
+print $fh $zipcontent;
+close($fh);
+$zipcontent = `$UNZIP -l $zipfile`;
+like($zipcontent, qr@GOE/AGA/00000/upos/morpho\.xml@, "conllu2korapxml can handle different foundries for motpho and dependency layers");
+like($zipcontent, qr@GOE/AGA/00000/gsd/dependency\.xml@, "conllu2korapxml sets the secondary dependency foundry correctly");
 
 done_testing;
