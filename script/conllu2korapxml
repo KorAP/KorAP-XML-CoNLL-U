@@ -203,11 +203,11 @@ sub newZipStream {
   my ($fname) = @_;
   if (defined $zip) {
     $zip->newStream(Zip64 => 1, TextFlag => 1, Method => $_COMPRESSION_METHOD,
-        Append            => 1, Name => $fname)
+        Append            => 1, Name => $fname, ExtAttr =>  0100666 << 16)
         or die "ERROR ('$fname'): zip failed: $ZipError\n";
   } else {
     $zip = new IO::Compress::Zip $outh, Zip64 => 1, TextFlag => 1,
-        Method => $_COMPRESSION_METHOD, Append => 0, Name => "$fname"
+        Method => $_COMPRESSION_METHOD, Append => 0, Name => "$fname", ExtAttr =>  0100666 << 16
         or die "ERROR ('$fname'): zip failed: $ZipError\n";
   }
 }
