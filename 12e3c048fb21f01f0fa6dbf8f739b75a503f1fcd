@@ -16,6 +16,24 @@
       "message": "Caution based on other change. Setting tests count is a cherry-pick PITA...",
       "revId": "12e3c048fb21f01f0fa6dbf8f739b75a503f1fcd",
       "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b6a134bb_350fbe2e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2024-03-27T07:47:52Z",
+      "side": 1,
+      "message": "I mainly switched to done_testing for lazyness - only use test count when it is necessary (one could argue it always is ;-)).",
+      "parentUuid": "2402a7e5_134cf51a",
+      "revId": "12e3c048fb21f01f0fa6dbf8f739b75a503f1fcd",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
     }
   ]
 }
