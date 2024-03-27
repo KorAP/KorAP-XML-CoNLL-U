@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7674439a_184286d6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 19
+      },
+      "writtenOn": "2024-03-27T08:07:26Z",
+      "side": 1,
+      "message": "I don\u0027t know if excluding a slash from $foundry_name and $dependency_foundry_name would be a good security measure or would limit the possibilities too much. When accepting user provided conllu files, this could become a problem.",
+      "revId": "c67a6790ec5a1fd05824498d26cc49c1ea17b15a",
+      "serverId": "626241b7-b7d0-4197-b843-1ee23887649c"
+    }
+  ]
+}
