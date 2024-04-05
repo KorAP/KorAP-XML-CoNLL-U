@@ -13,9 +13,6 @@ The state of the package is very preliminary. Currently, two scripts are provide
   and contain morphosyntactic and/or dependency annotations to
   corresponding KorAP-XML zip files
 
-**! This software is in its early stages and not stable yet! Use it on your own risk! It is very likely to be changed or
-replaced.**
-
 ## Installation
 
 ### Using cpanm
