@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 72;
+use Test::More;
 use Test::Script;
 use Test::TempDir::Tiny;
 use File::Copy;
