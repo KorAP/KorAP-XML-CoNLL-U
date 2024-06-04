@@ -1,3 +1,13 @@
+0.6.3 2024-06-04
+        - Trim filenames to fix double space after filename metadata
+        - Set permissions of zip contents to 666
+        - Allow different foundries for morpho and dependency annotations
+        - Readme: Drop early stage warning
+        - Drop cherry-pick unfriendly test count prediction
+        - conllu2korapxml:
+            - escape &, <, >
+            - convert upos column to upos features
+
 0.6.2 2024-01-24
         - Bump minimal perl version to 5.36 to improve unicode handling.
         - korapxml2conllu

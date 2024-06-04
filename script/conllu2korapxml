@@ -14,7 +14,7 @@ my $_COMPRESSION_METHOD = ZIP_CM_DEFLATE;
 my %opts;
 my %processedFilenames;
 
-our $VERSION = '0.6.2';
+our $VERSION = '0.6.3';
 our $VERSION_MSG = "\nconllu2korapxml - v$VERSION\n";
 
 use constant {
@@ -304,7 +304,7 @@ Loglevel for I<Log::Any>. Defaults to C<warn>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2021, L<IDS Mannheim|https://www.ids-mannheim.de/>
+Copyright (C) 2021-2024, L<IDS Mannheim|https://www.ids-mannheim.de/>
 
 Author: Marc Kupietz
 
