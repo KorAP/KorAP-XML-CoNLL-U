@@ -25,6 +25,7 @@ for my $morpho_fname (glob("t/data/*\.*\.zip")) {
     if (open(my $fh, '<', $conllu_fname)) {
         local $/;
         $expected = <$fh>;
+        $expected =~ s/^(# text_id\s*=\s*\S+)\s*$/$1/mg;
         close($fh);
     } else {
         fail("cannot open file $conllu_fname");
