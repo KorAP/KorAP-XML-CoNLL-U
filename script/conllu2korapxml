@@ -115,6 +115,7 @@ foreach my $conllu_file (@conllu_files) {
         }
       } elsif(/^(?:#|0\.2)\s+text_id\s*[:=]\s*(.*)/) {
         $docid=$1;
+        trim($docid);
         my $docSigle = $docid;
         $docSigle =~ s/\..*//;
         if($docSigle ne $lastDocSigle) {
