@@ -4,7 +4,7 @@
 # udpipe_model_licence = CC BY-NC-SA
 # foundry = base
 # filename = GOE/AGA/00000/base/tokens.xml
-# text_id = GOE_AGA.00000
+# text_id = GOE_AGA.00000 
 # start_offsets = 0 0 9 12
 # end_offsets = 22 8 11 22
 1	Campagne	Campagne	NOUN	NN	Gender=Fem|Number=Sing|Person=3	0	root	_	_
