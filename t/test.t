@@ -186,7 +186,6 @@ like($zipcontent, qr/.*<f name="pos">NN|NN<\/f>.*/, "conllu2korapxml does not ig
 script_runs([ 'script/conllu2korapxml', '-l', 'debug', 't/data/goe.ud.conllu' ], {stdout => \$zipcontent}, "Runs conllu2korap with UDPipe and unparsable comments");
 script_stderr_like "Foundry:\\s+ud", "Found generator based foundry";
 script_stderr_like "Ignored\\s+foundry\\s+name:\\s+base", "Ignore defined foundry";
-
 $zipfile = "$test_tempdir/goe.ud.zip";
 open($fh, ">", $zipfile) or fail("cannot open file $zipfile for writing");
 print $fh $zipcontent;
@@ -210,8 +209,8 @@ like($zipcontent, qr@GOE/AGA/00000/ud/dependency\.xml@, "conllu2korapxml UDPipe 
 
 script_runs([ 'script/conllu2korapxml', 't/data/deu-deps.conllu' ], "Runs conllu2korap with UDPipe input");
 script_stderr_unlike "fileparse(): need a valid pathname", "Ignore sent_id and newdoc id";
-script_stderr_like "WARNING: No valid input document.*token offsets missing", "Warn on missing token offsets";
-script_stderr_like qr@WARNING: No valid input document.*text.id .*missing@,   "Warn on missing text ids";
+script_stderr_like qr@WARNING: Invalid input in.*deu-deps.conllu.*token offsets missing.*in line \d+@, "Warn on missing token offsets";
+script_stderr_like qr@WARNING: Invalid input in.*deu-deps.conllu.*text.id .*missing.*in line \d+@,   "Warn on missing text ids";
 
 script_runs([ 'script/korapxml2conllu', "t/data/nkjp.zip" ], "Runs korapxml2conllu on nkjp test data");
 script_stderr_unlike("Use of uninitialized value", "Handles lonely docid parameters (line separated from layer elements)");

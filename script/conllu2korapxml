@@ -138,10 +138,10 @@ foreach my $conllu_file (@conllu_files) {
     } elsif ( !/^\s*$/ ) {
       if ( !$docid || scalar @spansTo == 0 || scalar @spansFrom == 0 ) {
         if ( !$docid ) {
-          $log->warn("WARNING: No valid input document: text_id (e.g. '# text_id = GOE_AGA.00000') missing");
+          $log->warn("WARNING: Invalid input in $conllu_file: text_id (e.g. '# text_id = GOE_AGA.00000') missing in line $. when writing to $outh");
         }
         if ( scalar @spansTo == 0 || scalar @spansFrom == 0 ) {
-          $log->warn("WARNING: No valid input document: token offsets missing");
+          $log->warn("WARNING: Invalid input in $conllu_file: token offsets missing in line $. when writing to $outh");
         }
 
         # Skip to next potentially valid document
