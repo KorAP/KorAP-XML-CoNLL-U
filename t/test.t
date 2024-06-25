@@ -203,7 +203,7 @@ unlike($zipcontent, qr/.*<f name="pos">_<\/f>.*/, "conllu2korapxml ignores _ pos
 unlike($zipcontent, qr/.*<f name="upos">_<\/f>.*/, "conllu2korapxml ignores _ upos tags.");
 
 $zipfile = "$test_tempdir/goe.ud2.zip";
-script_runs([ 'script/conllu2korapxml', '-l', 'warn', '-o', $zipfile, 't/data/goe.ud.conllu.missing_textid' ], {}, "Runs conllu2korap with -o option");
+script_runs([ 'script/conllu2korapxml', '-l', 'warn', '-o', $zipfile, 't/data/goe.ud.conllu' ], {}, "Runs conllu2korap with -o option");
 like($zipcontent, qr@GOE/AGA/00000/ud/morpho\.xml@, "conllu2korapxml UDPipe input conversion  -o option contains morpho layer with foundry name 'ud'");
 like($zipcontent, qr@GOE/AGA/00000/ud/dependency\.xml@, "conllu2korapxml UDPipe input conversion with -o option contains dependency layer with foundry name 'ud'");
 
