@@ -203,6 +203,11 @@ like($zipcontent, qr/.*<f name="pos">VVFIN<\/f>.*/, "conllu2korapxml extracts (x
 unlike($zipcontent, qr/.*<f name="pos">_<\/f>.*/, "conllu2korapxml ignores _ pos tags.");
 unlike($zipcontent, qr/.*<f name="upos">_<\/f>.*/, "conllu2korapxml ignores _ upos tags.");
 
+$zipfile = "$test_tempdir/goe.ud2.zip";
+script_runs([ 'script/conllu2korapxml', '-l', 'warn', '-o', $zipfile, 't/data/goe.ud.conllu.missing_textid' ], {}, "Runs conllu2korap with -o option");
+like($zipcontent, qr@GOE/AGA/00000/ud/morpho\.xml@, "conllu2korapxml UDPipe input conversion  -o option contains morpho layer with foundry name 'ud'");
+like($zipcontent, qr@GOE/AGA/00000/ud/dependency\.xml@, "conllu2korapxml UDPipe input conversion with -o option contains dependency layer with foundry name 'ud'");
+
 script_runs([ 'script/conllu2korapxml', 't/data/deu-deps.conllu' ], "Runs conllu2korap with UDPipe input");
 script_stderr_unlike "fileparse(): need a valid pathname", "Ignore sent_id and newdoc id";
 script_stderr_like "WARNING: No valid input document.*token offsets missing", "Warn on missing token offsets";

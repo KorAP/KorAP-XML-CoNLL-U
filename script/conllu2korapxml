@@ -25,6 +25,7 @@ use constant {
 GetOptions(
     'force-foundry|f=s'            => \(my $foundry_name = ''),
     'log|l=s'                      => \(my $log_level = 'warn'),
+    'output|o=s'                   => \(my $outh = '-'),
 
     'help|h'                       => sub {
       pod2usage(
@@ -50,7 +51,6 @@ $log->notice('Debugging is activated') if DEBUG;
 
 my $docid="";
 my $zip = undef;
-my $outh = '-';
 my $parser_file;
 my $parse;
 my $morpho_file;
@@ -294,6 +294,10 @@ Print version information.
 =item B<--log|-l>
 
 Loglevel for I<Log::Any>. Defaults to C<warn>.
+
+=item B<--output|-o>
+
+Output file. Defaults to C<-> (stdout).
 
 =back
 
