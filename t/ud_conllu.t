@@ -367,4 +367,149 @@ else {
     fail("Explicit offsets win: token uses from=100 (not computed 0)");
 }
 
+# -------------------------------------------------------------------
+# Inline test data: minimal UD CoNLL-U with explicit offsets.
+# Uses "# newdoc id" (UD style) instead of "# filename" / "# text_id"
+# (KorAP style). Explicit offsets are provided so this test does not
+# depend on automatic offset computation.
+# -------------------------------------------------------------------
+
+my $ud_conllu_data = <<'CONLLU';
+# newdoc id = TEST_LIT_001
+# start_offsets = 0 0 6 11
+# end_offsets = 12 5 11 12
+1	Geras	geras	ADJ	bdv.	Case=Nom	2	amod	_	_
+2	rytas	rytas	NOUN	dkt.	Case=Nom	0	root	_	_
+3	.	.	PUNCT	skyr.	_	2	punct	_	_
+
+CONLLU
+
+my $conllu_file = "$test_tempdir/test_ud.conllu";
+{
+    open(my $fh, '>:encoding(UTF-8)', $conllu_file)
+        or die "Cannot write test file: $!";
+    print $fh $ud_conllu_data;
+    close($fh);
+}
+
+my $zipcontent = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud',
+      '--text-sigle', 'TEST/TEST/{ID}', $conllu_file ],
+    { stdout => \$zipcontent },
+    "conllu2korapxml accepts --text-sigle with UD CoNLL-U input"
+);
+
+my $zipfile = "$test_tempdir/test_newdoc.zip";
+if ($zipcontent) {
+    open(my $zfh, '>:raw', $zipfile) or die "Cannot write zip: $!";
+    print $zfh $zipcontent;
+    close($zfh);
+
+    my $ziplist = `$UNZIP -l $zipfile 2>/dev/null`;
+    like($ziplist,
+        qr@TEST/TEST/TEST_LIT_001/ud/morpho\.xml@,
+        "Zip contains morpho.xml at path derived from newdoc id");
+    like($ziplist,
+        qr@TEST/TEST/TEST_LIT_001/ud/dependency\.xml@,
+        "Zip contains dependency.xml at path derived from newdoc id");
+
+    my $zipdata = `$UNZIP -c $zipfile 2>/dev/null`;
+    like($zipdata,
+        qr/docid="TEST_TEST\.TEST_LIT_001"/,
+        "docid correctly derived from text-sigle template and newdoc id");
+}
+else {
+    fail("Zip contains morpho.xml at path derived from newdoc id");
+    fail("Zip contains dependency.xml at path derived from newdoc id");
+    fail("docid correctly derived from text-sigle template and newdoc id");
+}
+
+my $zipcontent_lc = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud',
+      '--text-sigle', 'TEST/TEST/{id}', $conllu_file ],
+    { stdout => \$zipcontent_lc },
+    "text-sigle template accepts {id} (lowercase)"
+);
+
+if ($zipcontent_lc) {
+    my $zipfile_lc = "$test_tempdir/test_lc.zip";
+    open(my $zfh, '>:raw', $zipfile_lc) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_lc;
+    close($zfh);
+
+    my $zipdata_lc = `$UNZIP -c $zipfile_lc 2>/dev/null`;
+    like($zipdata_lc,
+        qr/docid="TEST_TEST\.TEST_LIT_001"/,
+        "docid correct with lowercase {id} template");
+}
+else {
+    fail("docid correct with lowercase {id} template");
+}
+
+my $zipcontent_mc = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud',
+      '--text-sigle', 'TEST/TEST/{Id}', $conllu_file ],
+    { stdout => \$zipcontent_mc },
+    "text-sigle template accepts {Id} (mixed case)"
+);
+
+if ($zipcontent_mc) {
+    my $zipfile_mc = "$test_tempdir/test_mc.zip";
+    open(my $zfh, '>:raw', $zipfile_mc) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_mc;
+    close($zfh);
+
+    my $zipdata_mc = `$UNZIP -c $zipfile_mc 2>/dev/null`;
+    like($zipdata_mc,
+        qr/docid="TEST_TEST\.TEST_LIT_001"/,
+        "docid correct with mixed-case {Id} template");
+}
+else {
+    fail("docid correct with mixed-case {Id} template");
+}
+
+# Template with only 2 parts (missing corpus level)
+my $err_2parts = `$^X script/conllu2korapxml -f ud --text-sigle 'TEST/{ID}' $conllu_file 2>&1`;
+isnt($? >> 8, 0, "Rejects template with only 2 parts (non-zero exit)");
+like($err_2parts, qr/ERROR/, "Error message for 2-part template");
+
+# Template with 4 parts (too many levels)
+my $err_4parts = `$^X script/conllu2korapxml -f ud --text-sigle 'A/B/C/{ID}' $conllu_file 2>&1`;
+isnt($? >> 8, 0, "Rejects template with 4 parts (non-zero exit)");
+like($err_4parts, qr/ERROR/, "Error message for 4-part template");
+
+# Template with empty middle part
+my $err_empty = `$^X script/conllu2korapxml -f ud --text-sigle 'TEST//{ID}' $conllu_file 2>&1`;
+isnt($? >> 8, 0, "Rejects template with empty part (non-zero exit)");
+like($err_empty, qr/ERROR/, "Error message for empty-part template");
+
+# Template with only 1 part (no slashes)
+my $err_1part = `$^X script/conllu2korapxml -f ud --text-sigle '{ID}' $conllu_file 2>&1`;
+isnt($? >> 8, 0, "Rejects template with only 1 part (non-zero exit)");
+like($err_1part, qr/ERROR/, "Error message for 1-part template");
+
+my $bad_id_data = <<'CONLLU';
+# newdoc id = BAD/SLASH_ID
+# start_offsets = 0 0
+# end_offsets = 4 4
+1	Test	test	NOUN	NN	_	0	root	_	_
+
+CONLLU
+
+my $bad_id_file = "$test_tempdir/bad_id.conllu";
+{
+    open(my $bfh, '>:encoding(UTF-8)', $bad_id_file)
+        or die "Cannot write test file: $!";
+    print $bfh $bad_id_data;
+    close($bfh);
+}
+
+my $err_slash = `$^X script/conllu2korapxml -f ud --text-sigle 'A/B/{ID}' $bad_id_file 2>&1`;
+isnt($? >> 8, 0,
+    "Rejects newdoc id with slash (expanded sigle has wrong part count)");
+like($err_slash, qr/ERROR/,
+    "Error message for newdoc id containing slash");
 done_testing;

@@ -24,6 +24,7 @@ use constant {
 
 GetOptions(
     'force-foundry|f=s'            => \(my $foundry_name = ''),
+    'text-sigle|s=s'               => \(my $text_sigle_template = ''),
     'log|l=s'                      => \(my $log_level = 'warn'),
     'output|o=s'                   => \(my $outh = '-'),
 
@@ -43,6 +44,22 @@ GetOptions(
       );
     }
 );
+
+# Validate text-sigle template format
+if ($text_sigle_template) {
+    my $test_sigle = $text_sigle_template;
+    $test_sigle =~ s/\{ID\}/PLACEHOLDER/gi;
+    my @tpl_parts = split('/', $test_sigle);
+    if (scalar @tpl_parts != 3) {
+        die "ERROR: text-sigle template must produce exactly 3"
+            . " slash-separated parts (CORPUS/DOC/TEXT), got "
+            . scalar(@tpl_parts) . " from '$text_sigle_template'\n";
+    }
+    if (grep { $_ eq '' } @tpl_parts) {
+        die "ERROR: text-sigle template '$text_sigle_template'"
+            . " must not contain empty parts\n";
+    }
+}
 
 # Establish logger
 binmode(STDERR, ':encoding(UTF-8)');
@@ -104,6 +121,48 @@ foreach my $conllu_file (@conllu_files) {
         $doc_offset = 0;
         $sentence_text = '';
         $compute_offsets_mode = 0;
+      } elsif (/^#\s*newdoc\s+id\s*=\s*(.*)/ && $text_sigle_template) {
+        my $newdoc_id = $1;
+        $newdoc_id =~ s/\s+$//;
+
+        if (!$first) {
+          closeDoc(0);
+        } else {
+          $first = 0;
+        }
+
+        my $text_sigle = $text_sigle_template;
+        $text_sigle =~ s/\{ID\}/$newdoc_id/gi;
+
+        my @parts = split('/', $text_sigle);
+        if (scalar @parts != 3 || grep { $_ eq '' } @parts) {
+            die "ERROR: Expanded text sigle '$text_sigle' is not"
+                . " in valid CORPUS/DOC/TEXT format\n";
+        }
+
+        $filename = "$text_sigle/base/tokens.xml";
+        if ($processedFilenames{$filename}) {
+          $log->warn("WARNING: $filename is already processed");
+        }
+        $processedFilenames{$filename} = 1;
+        $i = 0;
+
+        my $last = pop @parts;
+        $docid = join('_', @parts) . '.' . $last;
+
+        my $docSigle = $docid;
+        $docSigle =~ s/\..*//;
+        if ($docSigle ne $lastDocSigle) {
+          $log->info("Analyzing $docSigle");
+          $lastDocSigle = $docSigle;
+        }
+        $known = $unknown = 0;
+        $current = "";
+
+        $morpho_file = "$text_sigle/$foundry_name/morpho.xml";
+        $parser_file = "$text_sigle/$dependency_foundry_name/dependency.xml";
+
+        $parse = $morpho = layer_header($docid);
       } elsif(/^#\s*foundry\s*[:=]\s*(.*)/) {
         if(!$foundry_name) {
           $dependency_foundry_name = $foundry_name = $1;
@@ -344,6 +403,12 @@ C<conllu2korapxml> converts CoNLL-U files that follow KorAP-specific comment con
 
 Set foundry name and ignore foundry names in the input.
 
+=item B<--text-sigle|-s>
+
+Text sigle template with C<{ID}> placeholder for standard UD CoNLL-U
+input. When C<# newdoc id = E<lt>IDE<gt>> is encountered, C<{ID}> is
+replaced by the document id to derive the KorAP-XML text sigle,
+filename, and docid.
 
 =item B<--help|-h>
 
