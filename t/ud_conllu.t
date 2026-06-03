@@ -512,4 +512,194 @@ isnt($? >> 8, 0,
     "Rejects newdoc id with slash (expanded sigle has wrong part count)");
 like($err_slash, qr/ERROR/,
     "Error message for newdoc id containing slash");
+
+my $base_text_data = <<'CONLLU';
+# filename = TEST/TEST/TEST_BTX_001/base/tokens.xml
+# text_id = TEST_TEST.TEST_BTX_001
+# text = Geras rytas.
+# start_offsets = 0 0 6 11
+# end_offsets = 12 5 11 12
+1	Geras	geras	ADJ	bdv.	Case=Nom	2	amod	_	_
+2	rytas	rytas	NOUN	dkt.	Case=Nom	0	root	_	_
+3	.	.	PUNCT	skyr.	_	2	punct	_	SpaceAfter=No
+
+# text = Kaip sekasi?
+# start_offsets = 12 13 18 24
+# end_offsets = 25 17 24 25
+1	Kaip	kaip	ADV	prv.	_	2	advmod	_	_
+2	sekasi	sektis	VERB	vksm.	_	0	root	_	SpaceAfter=No
+3	?	?	PUNCT	skyr.	_	2	punct	_	_
+
+CONLLU
+
+my $btx_file = "$test_tempdir/test_base_text.conllu";
+{
+    open(my $bfh, '>:encoding(UTF-8)', $btx_file)
+        or die "Cannot write test file: $!";
+    print $bfh $base_text_data;
+    close($bfh);
+}
+
+# Run with --base-text to generate data.xml
+my $zipcontent_btx = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', '--base-text', $btx_file ],
+    { stdout => \$zipcontent_btx },
+    "conllu2korapxml accepts --base-text option"
+);
+
+my $zipfile_btx = "$test_tempdir/test_base_text.zip";
+if ($zipcontent_btx) {
+    open(my $zfh, '>:raw', $zipfile_btx) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_btx;
+    close($zfh);
+
+    my $ziplist = `$UNZIP -l $zipfile_btx 2>/dev/null`;
+    like($ziplist,
+        qr@TEST/TEST/TEST_BTX_001/data\.xml@,
+        "Zip contains data.xml at correct path");
+
+    my $data_xml = `$UNZIP -p $zipfile_btx 'TEST/TEST/TEST_BTX_001/data.xml' 2>/dev/null`;
+
+    like($data_xml,
+        qr/docid="TEST_TEST\.TEST_BTX_001"/,
+        "data.xml has correct docid attribute");
+
+    like($data_xml,
+        qr/<raw_text\b/,
+        "data.xml contains <raw_text> element");
+
+    like($data_xml,
+        qr{<text>Geras rytas\. Kaip sekasi\?</text>},
+        "data.xml text is sentences joined by single space");
+
+    like($data_xml,
+        qr/xmlns="http:\/\/ids-mannheim\.de\/ns\/KorAP"/,
+        "data.xml has correct namespace");
+
+    like($data_xml,
+        qr/<\?xml-model href="text\.rng"/,
+        "data.xml has correct processing instruction");
+}
+else {
+    fail("Zip contains data.xml at correct path");
+    fail("data.xml has correct docid attribute");
+    fail("data.xml contains <raw_text> element");
+    fail("data.xml text is sentences joined by single space");
+    fail("data.xml has correct namespace");
+    fail("data.xml has correct processing instruction");
+}
+
+# Run WITHOUT --base-text to verify data.xml is NOT generated
+my $zipcontent_no_btx = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', $btx_file ],
+    { stdout => \$zipcontent_no_btx },
+    "conllu2korapxml runs without --base-text"
+);
+
+my $zipfile_no_btx = "$test_tempdir/test_no_base_text.zip";
+if ($zipcontent_no_btx) {
+    open(my $zfh, '>:raw', $zipfile_no_btx) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_no_btx;
+    close($zfh);
+
+    my $ziplist_no = `$UNZIP -l $zipfile_no_btx 2>/dev/null`;
+    unlike($ziplist_no,
+        qr/data\.xml/,
+        "Zip does NOT contain data.xml when --base-text is omitted");
+}
+else {
+    fail("Zip does NOT contain data.xml when --base-text is omitted");
+}
+
+# Test XML escaping: text containing &, <, > characters
+my $escape_data = <<'CONLLU';
+# filename = TEST/TEST/TEST_ESC_001/base/tokens.xml
+# text_id = TEST_TEST.TEST_ESC_001
+# text = A & B < C > D
+# start_offsets = 0 0 2 4 6 8 10 12
+# end_offsets = 13 1 3 5 7 9 11 13
+1	A	a	NOUN	n.	_	0	root	_	_
+2	&	&	PUNCT	p.	_	1	punct	_	_
+3	B	b	NOUN	n.	_	1	conj	_	_
+4	<	<	PUNCT	p.	_	3	punct	_	_
+5	C	c	NOUN	n.	_	1	conj	_	_
+6	>	>	PUNCT	p.	_	5	punct	_	_
+7	D	d	NOUN	n.	_	1	conj	_	_
+
+CONLLU
+
+my $esc_file = "$test_tempdir/test_escape.conllu";
+{
+    open(my $efh, '>:encoding(UTF-8)', $esc_file)
+        or die "Cannot write test file: $!";
+    print $efh $escape_data;
+    close($efh);
+}
+
+my $zipcontent_esc = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', '--base-text', $esc_file ],
+    { stdout => \$zipcontent_esc },
+    "conllu2korapxml handles XML special chars in text"
+);
+
+my $zipfile_esc = "$test_tempdir/test_escape.zip";
+if ($zipcontent_esc) {
+    open(my $zfh, '>:raw', $zipfile_esc) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_esc;
+    close($zfh);
+
+    my $data_esc = `$UNZIP -p $zipfile_esc 'TEST/TEST/TEST_ESC_001/data.xml' 2>/dev/null`;
+    like($data_esc,
+        qr{<text>A &amp; B &lt; C &gt; D</text>},
+        "data.xml escapes &, <, > in full text string");
+}
+else {
+    fail("data.xml escapes &, <, > in full text string");
+}
+
+# Test single-sentence document (no joining needed)
+my $single_sent_data = <<'CONLLU';
+# filename = TEST/TEST/TEST_SST_001/base/tokens.xml
+# text_id = TEST_TEST.TEST_SST_001
+# text = Hello world
+# start_offsets = 0 0 6
+# end_offsets = 11 5 11
+1	Hello	hello	INTJ	intj.	_	0	root	_	_
+2	world	world	NOUN	n.	_	1	flat	_	_
+
+CONLLU
+
+my $sst_file = "$test_tempdir/test_single_sent.conllu";
+{
+    open(my $sfh, '>:encoding(UTF-8)', $sst_file)
+        or die "Cannot write test file: $!";
+    print $sfh $single_sent_data;
+    close($sfh);
+}
+
+my $zipcontent_sst = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', '--base-text', $sst_file ],
+    { stdout => \$zipcontent_sst },
+    "conllu2korapxml generates data.xml for single-sentence document"
+);
+
+my $zipfile_sst = "$test_tempdir/test_single_sent.zip";
+if ($zipcontent_sst) {
+    open(my $zfh, '>:raw', $zipfile_sst) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_sst;
+    close($zfh);
+
+    my $data_sst = `$UNZIP -p $zipfile_sst 'TEST/TEST/TEST_SST_001/data.xml' 2>/dev/null`;
+    like($data_sst,
+        qr{<text>Hello world</text>},
+        "data.xml single sentence: text matches exactly");
+}
+else {
+    fail("data.xml single sentence: text matches exactly");
+}
+
 done_testing;

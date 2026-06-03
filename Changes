@@ -4,6 +4,9 @@
               (implemented with AI assistance)
             - new option --text-sigle <template> to derive text sigle from newdoc id
               (implemented with AI assistance)
+            - Add --base-text option to generate data.xml with
+              reconstructed plain text from 'text' comment lines
+              (implemented with AI assistance)
 
 0.6.3 2024-06-04
         - Trim filenames to fix double space after filename metadata

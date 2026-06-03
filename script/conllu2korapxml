@@ -25,6 +25,7 @@ use constant {
 GetOptions(
     'force-foundry|f=s'            => \(my $foundry_name = ''),
     'text-sigle|s=s'               => \(my $text_sigle_template = ''),
+    'base-text'                    => \(my $base_text = 0),
     'log|l=s'                      => \(my $log_level = 'warn'),
     'output|o=s'                   => \(my $outh = '-'),
 
@@ -84,6 +85,8 @@ my $compute_offsets_mode = 0;
 my @dep_buffer;
 
 my ($write_morpho, $write_syntax, $base) = (1, 0, 0);
+# Sentence texts accumulated per document for data.xml generation
+my @doc_texts;
 my $filename;
 my $first=1;
 my @conllu_files = @ARGV;
@@ -121,6 +124,7 @@ foreach my $conllu_file (@conllu_files) {
         $doc_offset = 0;
         $sentence_text = '';
         $compute_offsets_mode = 0;
+        @doc_texts = ();
       } elsif (/^#\s*newdoc\s+id\s*=\s*(.*)/ && $text_sigle_template) {
         my $newdoc_id = $1;
         $newdoc_id =~ s/\s+$//;
@@ -203,8 +207,12 @@ foreach my $conllu_file (@conllu_files) {
       }  elsif (/^(?:#|0\.4)\s+(?:end_offsets|to)\s+[:=]\s*(.*)/) {
         @spansTo = split(/\s+/, $1);
       }  elsif (/^#\s*text\s*=\s*(.*)/) {
-        # Store sentence text for automatic offset computation
         $sentence_text = decode('UTF-8', $1);
+        if ($base_text) {
+          my $txt = $1;
+          $txt =~ s/\s+$//;
+          push @doc_texts, $txt;
+        }
       }
     } elsif ( !/^\s*$/ ) {
       # Pre-split columns before offset computation needs the raw form
@@ -362,6 +370,27 @@ sub closeDoc {
     newZipStream($parser_file);
     $zip->print($parse, qq(</spanList>\n</layer>\n));
   }
+  # Write data.xml with reconstructed text when --base-text is set
+  if ($base_text && $filename && @doc_texts) {
+    my $text_dir = dirname($filename);
+    $text_dir =~ s@(.*)/[^/]+$@$1@;
+    my $data_path = "$text_dir/data.xml";
+    my $full_text = join(' ', @doc_texts);
+    $full_text =~ s/&/&amp;/g;
+    $full_text =~ s/</&lt;/g;
+    $full_text =~ s/>/&gt;/g;
+    newZipStream($data_path);
+    $zip->print(
+      qq(<?xml version="1.0" encoding="UTF-8"?>\n),
+      qq(<?xml-model href="text.rng" type="application/xml"),
+      qq( schematypens="http://relaxng.org/ns/structure/1.0"?>\n),
+      qq(<raw_text docid="$docid"),
+      qq( xmlns="http://ids-mannheim.de/ns/KorAP">\n),
+      qq(<text>$full_text</text>\n),
+      qq(</raw_text>\n)
+    );
+    @doc_texts = ();
+  }
 }
 
 sub layer_header {
@@ -409,6 +438,12 @@ Text sigle template with C<{ID}> placeholder for standard UD CoNLL-U
 input. When C<# newdoc id = E<lt>IDE<gt>> is encountered, C<{ID}> is
 replaced by the document id to derive the KorAP-XML text sigle,
 filename, and docid.
+
+=item B<--base-text>
+
+Generate a C<data.xml> file containing the reconstructed plain text
+of each document. The text is built from C<# text> comment lines
+in the CoNLL-U input, joined by single spaces.
 
 =item B<--help|-h>
 
