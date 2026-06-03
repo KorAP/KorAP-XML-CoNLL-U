@@ -84,6 +84,17 @@ my $compute_offsets_mode = 0;
 # Buffer dependency arcs until all token offsets in a sentence are known
 my @dep_buffer;
 
+# Struct layer tracking for sentence and paragraph spans
+my @sentence_spans;
+my @paragraph_spans;
+my $current_sent_id = '';
+my $pending_newpar_id = '';
+my $current_par_from = -1;
+my $last_sent_to = -1;
+my $has_sent_ids = 0;
+my $sent_counter = 0;
+my $par_counter = 0;
+
 my ($write_morpho, $write_syntax, $base) = (1, 0, 0);
 my @doc_texts;
 my @token_spans;
@@ -128,6 +139,15 @@ foreach my $conllu_file (@conllu_files) {
         @doc_texts = ();
         @token_spans = ();
         $token_counter = 0;
+        @sentence_spans = ();
+        @paragraph_spans = ();
+        $current_sent_id = '';
+        $pending_newpar_id = '';
+        $current_par_from = -1;
+        $last_sent_to = -1;
+        $has_sent_ids = 0;
+        $sent_counter = 0;
+        $par_counter = 0;
       } elsif (/^#\s*newdoc\s+id\s*=\s*(.*)/ && $text_sigle_template) {
         my $newdoc_id = $1;
         $newdoc_id =~ s/\s+$//;
@@ -165,6 +185,15 @@ foreach my $conllu_file (@conllu_files) {
         }
         $known = $unknown = 0;
         $current = "";
+        @sentence_spans = ();
+        @paragraph_spans = ();
+        $current_sent_id = '';
+        $pending_newpar_id = '';
+        $current_par_from = -1;
+        $last_sent_to = -1;
+        $has_sent_ids = 0;
+        $sent_counter = 0;
+        $par_counter = 0;
 
         $morpho_file = "$text_sigle/$foundry_name/morpho.xml";
         $parser_file = "$text_sigle/$dependency_foundry_name/dependency.xml";
@@ -216,6 +245,14 @@ foreach my $conllu_file (@conllu_files) {
           $txt =~ s/\s+$//;
           push @doc_texts, $txt;
         }
+      }  elsif (/^#\s*sent_id\s*=\s*(.*)/) {
+        $current_sent_id = $1;
+        $current_sent_id =~ s/\s+$//;
+        $has_sent_ids = 1;
+      }  elsif (/^#\s*newpar(?:\s+id\s*=\s*(.*))?/) {
+        my $pid = defined($1) ? $1 : '';
+        $pid =~ s/\s+$//;
+        $pending_newpar_id = $pid || '__NEWPAR__';
       }
     } elsif ( !/^\s*$/ ) {
       # Pre-split columns before offset computation needs the raw form
@@ -328,15 +365,17 @@ foreach my $conllu_file (@conllu_files) {
       # Empty line = end of sentence
       flush_dep_buffer();
       if ($compute_offsets_mode) {
-        # Advance doc offset past sentence + 1-char space separator
         $doc_offset += length($sentence_text) + 1;
         @spansFrom = ();
         @spansTo = ();
         $compute_offsets_mode = 0;
       }
       $sentence_text = '';
+      record_sentence_struct();
     }
   }
+  # Flush last sentence if input lacks trailing empty line
+  record_sentence_struct();
   $current .= "\n";
   closeDoc(1);
   $zip->close() if $zip;
@@ -369,6 +408,22 @@ sub flush_dep_buffer {
 @;
   }
   @dep_buffer = ();
+}
+
+sub record_sentence_struct {
+  return unless $has_sent_ids && $current_sent_id && scalar @spansFrom > 0;
+  $sent_counter++;
+  push @sentence_spans, ["s$sent_counter", $spansFrom[0], $spansTo[0]];
+  if ($pending_newpar_id) {
+    if ($current_par_from >= 0 && $last_sent_to >= 0) {
+      $par_counter++;
+      push @paragraph_spans, ["p$par_counter", $current_par_from, $last_sent_to];
+    }
+    $current_par_from = $spansFrom[0];
+    $pending_newpar_id = '';
+  }
+  $last_sent_to = $spansTo[0];
+  $current_sent_id = '';
 }
 
 sub closeDoc {
@@ -413,6 +468,34 @@ sub closeDoc {
     }
     newZipStream($tokens_path);
     $zip->print($tokens_out, qq(</spanList>\n</layer>\n));
+  }
+  if ($has_sent_ids && $filename) {
+    if ($current_par_from >= 0 && $last_sent_to >= 0) {
+      $par_counter++;
+      push @paragraph_spans, ["p$par_counter", $current_par_from, $last_sent_to];
+    }
+    my $text_dir = dirname($filename);
+    $text_dir =~ s@(.*)/[^/]+$@$1@;
+    my $struct_path = "$text_dir/base/struct.xml";
+    my $struct = layer_header($docid);
+    my @all_spans;
+    for my $span (@sentence_spans) {
+      push @all_spans, [$span->[0], $span->[1], $span->[2], 's'];
+    }
+    for my $span (@paragraph_spans) {
+      push @all_spans, [$span->[0], $span->[1], $span->[2], 'p'];
+    }
+    @all_spans = sort { $a->[1] <=> $b->[1] || $a->[2] <=> $b->[2] } @all_spans;
+    for my $span (@all_spans) {
+      my ($id, $from, $to, $name) = @$span;
+      $struct .= qq(  <span id="$id" from="$from" to="$to">\n)
+               . qq(   <fs type="struct" xmlns="http://www.tei-c.org/ns/1.0">\n)
+               . qq(    <f name="name">$name</f>\n)
+               . qq(   </fs>\n)
+               . qq(  </span>\n);
+    }
+    newZipStream($struct_path);
+    $zip->print($struct, qq(</spanList>\n</layer>\n));
   }
 }
 

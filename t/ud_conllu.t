@@ -43,6 +43,33 @@ my $misc_data = <<'CONLLU';
 
 CONLLU
 
+my $struct_data = <<'CONLLU';
+# filename = TEST/TEST/TEST_STR_001/base/tokens.xml
+# text_id = TEST_TEST.TEST_STR_001
+# newpar id = p1
+# sent_id = s1.1
+# start_offsets = 0 0 6 11
+# end_offsets = 12 5 11 12
+1	Geras	geras	ADJ	bdv.	Case=Nom	2	amod	_	_
+2	rytas	rytas	NOUN	dkt.	Case=Nom	0	root	_	_
+3	.	.	PUNCT	skyr.	_	2	punct	_	SpaceAfter=No
+
+# sent_id = s1.2
+# start_offsets = 12 13 18 24
+# end_offsets = 25 17 24 25
+1	Kaip	kaip	ADV	prv.	_	2	advmod	_	_
+2	sekasi	sektis	VERB	vksm.	_	0	root	_	SpaceAfter=No
+3	?	?	PUNCT	skyr.	_	2	punct	_	_
+
+# newpar id = p2
+# sent_id = s2.1
+# start_offsets = 25 26 32
+# end_offsets = 39 31 39
+1	Labas	labas	ADJ	bdv.	Case=Nom	0	root	_	_
+2	vakaras	vakaras	NOUN	dkt.	Case=Nom	1	nmod	_	_
+
+CONLLU
+
 my $test_tempdir = tempdir();
 my $offset_file = "$test_tempdir/test_offset.conllu";
 {
@@ -896,6 +923,255 @@ else {
     fail("MISC: SpacesAfter filtered, Tag=MMM kept");
     fail("MISC: no SpacesAfter value appears in output");
     fail("MISC: no SpaceAfter value appears in output at all");
+}
+
+my $struct_file = "$test_tempdir/test_struct.conllu";
+{
+    open(my $sfh, '>:encoding(UTF-8)', $struct_file)
+        or die "Cannot write test file: $!";
+    print $sfh $struct_data;
+    close($sfh);
+}
+
+my $zipcontent_str = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', $struct_file ],
+    { stdout => \$zipcontent_str },
+    "conllu2korapxml generates struct.xml when sent_id present"
+);
+
+my $zipfile_str = "$test_tempdir/test_struct.zip";
+if ($zipcontent_str) {
+    open(my $zfh, '>:raw', $zipfile_str) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_str;
+    close($zfh);
+
+    my $ziplist = `$UNZIP -l $zipfile_str 2>/dev/null`;
+    like($ziplist,
+        qr@TEST/TEST/TEST_STR_001/base/struct\.xml@,
+        "Zip contains struct.xml at correct path");
+
+    my $struct_xml = `$UNZIP -p $zipfile_str 'TEST/TEST/TEST_STR_001/base/struct.xml' 2>/dev/null`;
+
+    like($struct_xml,
+        qr/docid="TEST_TEST\.TEST_STR_001"/,
+        "struct.xml has correct docid attribute");
+
+    like($struct_xml,
+        qr/xmlns="http:\/\/ids-mannheim\.de\/ns\/KorAP"/,
+        "struct.xml has correct namespace");
+
+    like($struct_xml,
+        qr/<\?xml-model href="span\.rng"/,
+        "struct.xml has correct processing instruction");
+
+    # Sentence spans: s1 (0..12), s2 (12..25), s3 (25..39)
+    like($struct_xml,
+        qr/id="s1" from="0" to="12".*?<f name="name">s<\/f>/s,
+        "Sentence span s1: from=0 to=12");
+
+    like($struct_xml,
+        qr/id="s2" from="12" to="25".*?<f name="name">s<\/f>/s,
+        "Sentence span s2: from=12 to=25");
+
+    like($struct_xml,
+        qr/id="s3" from="25" to="39".*?<f name="name">s<\/f>/s,
+        "Sentence span s3: from=25 to=39");
+
+    # Paragraph spans: p1 (0..25), p2 (25..39)
+    like($struct_xml,
+        qr/id="p1" from="0" to="25".*?<f name="name">p<\/f>/s,
+        "Paragraph span p1: from=0 to=25");
+
+    like($struct_xml,
+        qr/id="p2" from="25" to="39".*?<f name="name">p<\/f>/s,
+        "Paragraph span p2: from=25 to=39");
+
+    # All struct spans use the TEI namespace
+    like($struct_xml,
+        qr/<fs type="struct" xmlns="http:\/\/www\.tei-c\.org\/ns\/1\.0">/,
+        "Struct spans use TEI namespace");
+
+    # Spans are sorted by from ascending, then to ascending (mixed s and p)
+    my @span_order;
+    while ($struct_xml =~ /id="([sp]\d+)" from="(\d+)" to="(\d+)"/g) {
+        push @span_order, [$1, $2, $3];
+    }
+    my $sorted_ok = 1;
+    for my $j (1 .. $#span_order) {
+        if ($span_order[$j]->[1] < $span_order[$j-1]->[1] ||
+            ($span_order[$j]->[1] == $span_order[$j-1]->[1] &&
+             $span_order[$j]->[2] < $span_order[$j-1]->[2])) {
+            $sorted_ok = 0;
+            last;
+        }
+    }
+    ok($sorted_ok, "Struct spans are sorted by from then to");
+}
+else {
+    fail("Zip contains struct.xml at correct path");
+    fail("struct.xml has correct docid attribute");
+    fail("struct.xml has correct namespace");
+    fail("struct.xml has correct processing instruction");
+    fail("Sentence span s1: from=0 to=12");
+    fail("Sentence span s2: from=12 to=25");
+    fail("Sentence span s3: from=25 to=39");
+    fail("Paragraph span p1: from=0 to=25");
+    fail("Paragraph span p2: from=25 to=39");
+    fail("Struct spans use TEI namespace");
+}
+
+my $sent_only_data = <<'CONLLU';
+# filename = TEST/TEST/TEST_SNO_001/base/tokens.xml
+# text_id = TEST_TEST.TEST_SNO_001
+# sent_id = x1
+# start_offsets = 0 0 6
+# end_offsets = 11 5 11
+1	Hello	hello	INTJ	intj.	_	0	root	_	_
+2	world	world	NOUN	n.	_	1	flat	_	_
+
+# sent_id = x2
+# start_offsets = 11 12 18
+# end_offsets = 23 17 23
+1	Good	good	ADJ	adj.	_	2	amod	_	_
+2	night	night	NOUN	n.	_	0	root	_	_
+
+CONLLU
+
+my $sno_file = "$test_tempdir/test_sent_only.conllu";
+{
+    open(my $sfh, '>:encoding(UTF-8)', $sno_file)
+        or die "Cannot write test file: $!";
+    print $sfh $sent_only_data;
+    close($sfh);
+}
+
+my $zipcontent_sno = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', $sno_file ],
+    { stdout => \$zipcontent_sno },
+    "conllu2korapxml generates struct.xml with sent_id only (no newpar)"
+);
+
+my $zipfile_sno = "$test_tempdir/test_sent_only.zip";
+if ($zipcontent_sno) {
+    open(my $zfh, '>:raw', $zipfile_sno) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_sno;
+    close($zfh);
+
+    my $struct_sno = `$UNZIP -p $zipfile_sno 'TEST/TEST/TEST_SNO_001/base/struct.xml' 2>/dev/null`;
+
+    like($struct_sno,
+        qr/id="s1" from="0" to="11".*?<f name="name">s<\/f>/s,
+        "Sent-only: sentence span s1 from=0 to=11");
+
+    like($struct_sno,
+        qr/id="s2" from="11" to="23".*?<f name="name">s<\/f>/s,
+        "Sent-only: sentence span s2 from=11 to=23");
+
+    unlike($struct_sno,
+        qr/>p<\/f>/,
+        "Sent-only: no paragraph spans when newpar absent");
+}
+else {
+    fail("Sent-only: sentence span s1 from=0 to=11");
+    fail("Sent-only: sentence span s2 from=11 to=23");
+    fail("Sent-only: no paragraph spans when newpar absent");
+}
+
+my $no_struct_data = <<'CONLLU';
+# filename = TEST/TEST/TEST_NOS_001/base/tokens.xml
+# text_id = TEST_TEST.TEST_NOS_001
+# start_offsets = 0 0 4
+# end_offsets = 7 3 7
+1	foo	foo	NOUN	n.	_	0	root	_	_
+2	bar	bar	NOUN	n.	_	1	flat	_	_
+
+CONLLU
+
+my $nos_file = "$test_tempdir/test_no_struct.conllu";
+{
+    open(my $nfh, '>:encoding(UTF-8)', $nos_file)
+        or die "Cannot write test file: $!";
+    print $nfh $no_struct_data;
+    close($nfh);
+}
+
+my $zipcontent_nos = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', $nos_file ],
+    { stdout => \$zipcontent_nos },
+    "conllu2korapxml runs without sent_id (no struct.xml)"
+);
+
+my $zipfile_nos = "$test_tempdir/test_no_struct.zip";
+if ($zipcontent_nos) {
+    open(my $zfh, '>:raw', $zipfile_nos) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_nos;
+    close($zfh);
+
+    my $ziplist_nos = `$UNZIP -l $zipfile_nos 2>/dev/null`;
+    unlike($ziplist_nos,
+        qr/struct\.xml/,
+        "Zip does NOT contain struct.xml when sent_id absent");
+}
+else {
+    fail("Zip does NOT contain struct.xml when sent_id absent");
+}
+
+my $bare_newpar_data = <<'CONLLU';
+# filename = TEST/TEST/TEST_BNP_001/base/tokens.xml
+# text_id = TEST_TEST.TEST_BNP_001
+# newpar
+# sent_id = a1
+# start_offsets = 0 0 4
+# end_offsets = 7 3 7
+1	one	one	NUM	num.	_	0	root	_	_
+2	two	two	NUM	num.	_	1	flat	_	_
+
+# newpar
+# sent_id = a2
+# start_offsets = 7 8 14
+# end_offsets = 17 13 17
+1	three	three	NUM	num.	_	0	root	_	_
+2	four	four	NUM	num.	_	1	flat	_	_
+
+CONLLU
+
+my $bnp_file = "$test_tempdir/test_bare_newpar.conllu";
+{
+    open(my $bfh, '>:encoding(UTF-8)', $bnp_file)
+        or die "Cannot write test file: $!";
+    print $bfh $bare_newpar_data;
+    close($bfh);
+}
+
+my $zipcontent_bnp = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', $bnp_file ],
+    { stdout => \$zipcontent_bnp },
+    "conllu2korapxml handles bare newpar (without id)"
+);
+
+my $zipfile_bnp = "$test_tempdir/test_bare_newpar.zip";
+if ($zipcontent_bnp) {
+    open(my $zfh, '>:raw', $zipfile_bnp) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_bnp;
+    close($zfh);
+
+    my $struct_bnp = `$UNZIP -p $zipfile_bnp 'TEST/TEST/TEST_BNP_001/base/struct.xml' 2>/dev/null`;
+
+    like($struct_bnp,
+        qr/id="p1" from="0" to="7".*?<f name="name">p<\/f>/s,
+        "Bare newpar: paragraph p1 from=0 to=7");
+
+    like($struct_bnp,
+        qr/id="p2" from="7" to="17".*?<f name="name">p<\/f>/s,
+        "Bare newpar: paragraph p2 from=7 to=17");
+}
+else {
+    fail("Bare newpar: paragraph p1 from=0 to=7");
+    fail("Bare newpar: paragraph p2 from=7 to=17");
 }
 
 done_testing;

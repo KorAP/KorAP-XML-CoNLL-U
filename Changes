@@ -11,6 +11,8 @@
               (implemented with AI assistance)
             - Filter SpaceAfter/SpacesAfter from MISC column
               (implemented with AI assistance)
+            - Add struct.xml generation from sent_id and newpar comments
+              (implemented with AI assistance)
 
 0.6.3 2024-06-04
         - Trim filenames to fix double space after filename metadata
