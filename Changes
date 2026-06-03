@@ -1,3 +1,8 @@
+0.7.0 2025-06-03
+        - conllu2korapxml:
+            - Add automatic offset computation from 'text' comments
+              (implemented with AI assistance)
+
 0.6.3 2024-06-04
         - Trim filenames to fix double space after filename metadata
         - Set permissions of zip contents to 666

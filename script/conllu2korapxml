@@ -14,7 +14,7 @@ my $_COMPRESSION_METHOD = ZIP_CM_DEFLATE;
 my %opts;
 my %processedFilenames;
 
-our $VERSION = '0.6.3';
+our $VERSION = '0.7.0';
 our $VERSION_MSG = "\nconllu2korapxml - v$VERSION\n";
 
 use constant {
@@ -59,6 +59,12 @@ my @spansFrom;
 my @spansTo;
 my $current;
 my ($unknown, $known) = (0, 0);
+my $sentence_text = '';
+my $doc_offset = 0;
+my $text_pos = 0;
+my $compute_offsets_mode = 0;
+# Buffer dependency arcs until all token offsets in a sentence are known
+my @dep_buffer;
 
 my ($write_morpho, $write_syntax, $base) = (1, 0, 0);
 my $filename;
@@ -95,6 +101,9 @@ foreach my $conllu_file (@conllu_files) {
         }
         $processedFilenames{$filename}=1;
         $i=0;
+        $doc_offset = 0;
+        $sentence_text = '';
+        $compute_offsets_mode = 0;
       } elsif(/^#\s*foundry\s*[:=]\s*(.*)/) {
         if(!$foundry_name) {
           $dependency_foundry_name = $foundry_name = $1;
@@ -134,8 +143,43 @@ foreach my $conllu_file (@conllu_files) {
         @spansFrom = split(/\s+/, $1);
       }  elsif (/^(?:#|0\.4)\s+(?:end_offsets|to)\s+[:=]\s*(.*)/) {
         @spansTo = split(/\s+/, $1);
+      }  elsif (/^#\s*text\s*=\s*(.*)/) {
+        # Store sentence text for automatic offset computation
+        $sentence_text = decode('UTF-8', $1);
       }
     } elsif ( !/^\s*$/ ) {
+      # Pre-split columns before offset computation needs the raw form
+      my @raw_cols = split('\t');
+      chomp $raw_cols[$#raw_cols] if @raw_cols;
+
+      # Enter offset computation mode when no explicit offsets given
+      if (!$compute_offsets_mode && scalar @spansFrom == 0
+          && $sentence_text && $docid) {
+        $compute_offsets_mode = 1;
+        @spansFrom = ();
+        @spansTo = ();
+        # Sentence-level span covers the full sentence text
+        $spansFrom[0] = $doc_offset;
+        $spansTo[0] = $doc_offset + length($sentence_text);
+        $text_pos = 0;
+      }
+
+      # Locate each token form in sentence text via index()
+      if ($compute_offsets_mode && @raw_cols >= 2 && $raw_cols[0] =~ /^\d+$/) {
+        my $raw_form = decode('UTF-8', $raw_cols[1]);
+        my $t_num = $raw_cols[0];
+        # Find token starting from current position (handles SpaceAfter)
+        my $pos_in_text = index($sentence_text, $raw_form, $text_pos);
+        if ($pos_in_text >= 0) {
+          $spansFrom[$t_num] = $doc_offset + $pos_in_text;
+          $spansTo[$t_num] = $spansFrom[$t_num] + length($raw_form);
+          # Advance past this token for the next search
+          $text_pos = $pos_in_text + length($raw_form);
+        } else {
+          $log->warn("WARNING: Token form not found in sentence text in $conllu_file line $.");
+        }
+      }
+
       if ( !$docid || scalar @spansTo == 0 || scalar @spansFrom == 0 ) {
         if ( !$docid ) {
           $log->warn("WARNING: Invalid input in $conllu_file: text_id (e.g. '# text_id = GOE_AGA.00000') missing in line $. when writing to $outh");
@@ -155,8 +199,7 @@ foreach my $conllu_file (@conllu_files) {
         $s =~ s/</&lt;/g;
         $s =~ s/>/&gt;/g;
         $s;
-      } split('\t');
-      chomp  $parsed[9];
+      } @raw_cols;
       if (@parsed != 10) {
         $log->warn("WARNING: skipping strange parser output line in $docid");
         $i++;
@@ -169,14 +212,8 @@ foreach my $conllu_file (@conllu_files) {
       }
       if($parsed[6] =~ /\d+/ && $parsed[7] !~ /_/) {
         $write_syntax=1;
-        my $from=$spansFrom[$parsed[6]];
-        my $to=$spansTo[$parsed[6]];
-          $parse .= qq@<span id="s${s}_n$t" from="$spansFrom[$t]" to="$spansTo[$t]">
-<rel label="$parsed[7]">
-<span from="$from" to="$to"/>
-</rel>
-</span>
-@;
+        # Buffer dep arcs; flushed at end of sentence when offsets are ready
+        push @dep_buffer, [$s, $t, $parsed[6], $parsed[7]];
       }
       my $pos = $parsed[4];
       my $upos = $parsed[3];
@@ -208,6 +245,17 @@ foreach my $conllu_file (@conllu_files) {
   </span>
 );
         $i++;
+    } else {
+      # Empty line = end of sentence
+      flush_dep_buffer();
+      if ($compute_offsets_mode) {
+        # Advance doc offset past sentence + 1-char space separator
+        $doc_offset += length($sentence_text) + 1;
+        @spansFrom = ();
+        @spansTo = ();
+        $compute_offsets_mode = 0;
+      }
+      $sentence_text = '';
     }
   }
   $current .= "\n";
@@ -230,7 +278,22 @@ sub newZipStream {
   }
 }
 
+# Write buffered dependency arcs now that all token offsets are resolved
+sub flush_dep_buffer {
+  foreach my $dep (@dep_buffer) {
+    my ($ds, $dt, $dhead, $dlabel) = @$dep;
+    $parse .= qq@<span id="s${ds}_n$dt" from="$spansFrom[$dt]" to="$spansTo[$dt]">
+<rel label="$dlabel">
+<span from="$spansFrom[$dhead]" to="$spansTo[$dhead]"/>
+</rel>
+</span>
+@;
+  }
+  @dep_buffer = ();
+}
+
 sub closeDoc {
+  flush_dep_buffer();
   if ($write_morpho && $morpho_file) {
     newZipStream($morpho_file);
     $zip->print($morpho, qq( </spanList>\n</layer>\n));
