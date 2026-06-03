@@ -702,4 +702,111 @@ else {
     fail("data.xml single sentence: text matches exactly");
 }
 
+# Test: --base-tokens produces base/tokens.xml
+my $zipcontent_tok = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', '--base-tokens', $btx_file ],
+    { stdout => \$zipcontent_tok },
+    "conllu2korapxml runs with --base-tokens"
+);
+
+my $zipfile_tok = "$test_tempdir/test_tokens.zip";
+if ($zipcontent_tok) {
+    open(my $zfh, '>:raw', $zipfile_tok) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_tok;
+    close($zfh);
+
+    my $ziplist = `$UNZIP -l $zipfile_tok 2>/dev/null`;
+    like($ziplist,
+        qr@TEST/TEST/TEST_BTX_001/base/tokens\.xml@,
+        "Zip contains base/tokens.xml at correct path");
+
+    my $tokens_xml = `$UNZIP -p $zipfile_tok 'TEST/TEST/TEST_BTX_001/base/tokens.xml' 2>/dev/null`;
+
+    like($tokens_xml,
+        qr/docid="TEST_TEST\.TEST_BTX_001"/,
+        "tokens.xml has correct docid attribute");
+
+    like($tokens_xml,
+        qr/xmlns="http:\/\/ids-mannheim\.de\/ns\/KorAP"/,
+        "tokens.xml has correct namespace");
+
+    like($tokens_xml,
+        qr/<\?xml-model href="span\.rng"/,
+        "tokens.xml has correct processing instruction");
+
+    like($tokens_xml,
+        qr/version="KorAP-0\.4"/,
+        "tokens.xml has correct version");
+
+    # Token spans with sequential IDs and correct offsets
+    # Sentence 1: Geras(0..5) rytas(6..11) .(11..12)
+    like($tokens_xml,
+        qr/<span id="t_0" from="0" to="5"\/>/,
+        "Token t_0: Geras from=0 to=5");
+
+    like($tokens_xml,
+        qr/<span id="t_1" from="6" to="11"\/>/,
+        "Token t_1: rytas from=6 to=11");
+
+    like($tokens_xml,
+        qr/<span id="t_2" from="11" to="12"\/>/,
+        "Token t_2: period from=11 to=12");
+
+    # Sentence 2: Kaip(13..17) sekasi(18..24) ?(24..25)
+    like($tokens_xml,
+        qr/<span id="t_3" from="13" to="17"\/>/,
+        "Token t_3: Kaip from=13 to=17");
+
+    like($tokens_xml,
+        qr/<span id="t_4" from="18" to="24"\/>/,
+        "Token t_4: sekasi from=18 to=24");
+
+    like($tokens_xml,
+        qr/<span id="t_5" from="24" to="25"\/>/,
+        "Token t_5: question mark from=24 to=25");
+
+    # Self-closing span elements (no child fs element)
+    unlike($tokens_xml,
+        qr/<span id="t_0"[^\/]*>.*?<\/span>/s,
+        "Token spans are self-closing (no child elements)");
+}
+else {
+    fail("Zip contains base/tokens.xml at correct path");
+    fail("tokens.xml has correct docid attribute");
+    fail("tokens.xml has correct namespace");
+    fail("tokens.xml has correct processing instruction");
+    fail("tokens.xml has correct version");
+    fail("Token t_0: Geras from=0 to=5");
+    fail("Token t_1: rytas from=6 to=11");
+    fail("Token t_2: period from=11 to=12");
+    fail("Token t_3: Kaip from=13 to=17");
+    fail("Token t_4: sekasi from=18 to=24");
+    fail("Token t_5: question mark from=24 to=25");
+    fail("Token spans are self-closing (no child elements)");
+}
+
+# Test: without --base-tokens, no base/tokens.xml is produced
+my $zipcontent_notok = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', $btx_file ],
+    { stdout => \$zipcontent_notok },
+    "conllu2korapxml runs without --base-tokens"
+);
+
+my $zipfile_notok = "$test_tempdir/test_notokens.zip";
+if ($zipcontent_notok) {
+    open(my $zfh, '>:raw', $zipfile_notok) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_notok;
+    close($zfh);
+
+    my $ziplist_notok = `$UNZIP -l $zipfile_notok 2>/dev/null`;
+    unlike($ziplist_notok,
+        qr/base\/tokens\.xml/,
+        "Zip does NOT contain base/tokens.xml when --base-tokens omitted");
+}
+else {
+    fail("Zip does NOT contain base/tokens.xml when --base-tokens omitted");
+}
+
 done_testing;

@@ -28,7 +28,7 @@ GetOptions(
     'base-text'                    => \(my $base_text = 0),
     'log|l=s'                      => \(my $log_level = 'warn'),
     'output|o=s'                   => \(my $outh = '-'),
-
+    'base-tokens'                  => \(my $base_tokens = 0),
     'help|h'                       => sub {
       pod2usage(
           -verbose  => 99,
@@ -85,8 +85,9 @@ my $compute_offsets_mode = 0;
 my @dep_buffer;
 
 my ($write_morpho, $write_syntax, $base) = (1, 0, 0);
-# Sentence texts accumulated per document for data.xml generation
 my @doc_texts;
+my @token_spans;
+my $token_counter = 0;
 my $filename;
 my $first=1;
 my @conllu_files = @ARGV;
@@ -125,6 +126,8 @@ foreach my $conllu_file (@conllu_files) {
         $sentence_text = '';
         $compute_offsets_mode = 0;
         @doc_texts = ();
+        @token_spans = ();
+        $token_counter = 0;
       } elsif (/^#\s*newdoc\s+id\s*=\s*(.*)/ && $text_sigle_template) {
         my $newdoc_id = $1;
         $newdoc_id =~ s/\s+$//;
@@ -311,6 +314,10 @@ foreach my $conllu_file (@conllu_files) {
    </fs>
   </span>
 );
+        # Collect token span for optional base/tokens.xml output
+        if ($base_tokens) {
+          push @token_spans, [$spansFrom[$t], $spansTo[$t]];
+        }
         $i++;
     } else {
       # Empty line = end of sentence
@@ -370,7 +377,6 @@ sub closeDoc {
     newZipStream($parser_file);
     $zip->print($parse, qq(</spanList>\n</layer>\n));
   }
-  # Write data.xml with reconstructed text when --base-text is set
   if ($base_text && $filename && @doc_texts) {
     my $text_dir = dirname($filename);
     $text_dir =~ s@(.*)/[^/]+$@$1@;
@@ -390,6 +396,18 @@ sub closeDoc {
       qq(</raw_text>\n)
     );
     @doc_texts = ();
+  }
+  if ($base_tokens && $filename && @token_spans) {
+    my $text_dir = dirname($filename);
+    $text_dir =~ s@(.*)/[^/]+$@$1@;
+    my $tokens_path = "$text_dir/base/tokens.xml";
+    my $tokens_out = layer_header($docid);
+    for my $idx (0 .. $#token_spans) {
+      my ($from, $to) = @{$token_spans[$idx]};
+      $tokens_out .= qq(  <span id="t_$idx" from="$from" to="$to"/>\n);
+    }
+    newZipStream($tokens_path);
+    $zip->print($tokens_out, qq(</spanList>\n</layer>\n));
   }
 }
 
