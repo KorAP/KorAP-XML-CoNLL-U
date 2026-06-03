@@ -301,6 +301,11 @@ foreach my $conllu_file (@conllu_files) {
       }
       $morpho .= qq(      <f name="lemma">$parsed[2]</f>\n) if($parsed[2] ne "_" || $parsed[1] eq '_');
       $morpho .= qq(      <f name="msd">$parsed[5]</f>\n) if($parsed[5] ne "_");
+      # Filter SpaceAfter from MISC column
+      if ($parsed[9] ne "_") {
+        my @misc_parts = grep { !/^Spaces?After/ } split(/\|/, $parsed[9]);
+        $parsed[9] = @misc_parts ? join('|', @misc_parts) : '_';
+      }
       if($parsed[9] ne "_") {
         if ($parsed[9] =~ /[0-9.e]+/) {
           $morpho .= qq(      <f name="certainty">$parsed[9]</f>\n)

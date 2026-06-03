@@ -26,6 +26,23 @@ my $offset_data = <<'CONLLU';
 
 CONLLU
 
+my $misc_data = <<'CONLLU';
+# filename = TEST/TEST/TEST_MISC_001/base/tokens.xml
+# text_id = TEST_TEST.TEST_MISC_001
+# start_offsets = 0 0 6 11
+# end_offsets = 12 5 11 12
+1	Geras	geras	ADJ	bdv.	Case=Nom	2	amod	_	SpaceAfter=No|Tag=NNN
+2	rytas	rytas	NOUN	dkt.	Case=Nom	0	root	_	Tag=LLL
+3	.	.	PUNCT	skyr.	_	2	punct	_	SpaceAfter=No
+
+# start_offsets = 12 13 18 24
+# end_offsets = 25 17 24 25
+1	Kaip	kaip	ADV	prv.	_	2	advmod	_	SpacesAfter=\n|Tag=MMM
+2	sekasi	sektis	VERB	vksm.	_	0	root	_	_
+3	?	?	PUNCT	skyr.	_	2	punct	_	_
+
+CONLLU
+
 my $test_tempdir = tempdir();
 my $offset_file = "$test_tempdir/test_offset.conllu";
 {
@@ -807,6 +824,78 @@ if ($zipcontent_notok) {
 }
 else {
     fail("Zip does NOT contain base/tokens.xml when --base-tokens omitted");
+}
+
+my $misc_file = "$test_tempdir/test_misc.conllu";
+{
+    open(my $mfh, '>:encoding(UTF-8)', $misc_file)
+        or die "Cannot write test file: $!";
+    print $mfh $misc_data;
+    close($mfh);
+}
+
+my $zipcontent_misc = '';
+script_runs(
+    [ 'script/conllu2korapxml', '-f', 'ud', $misc_file ],
+    { stdout => \$zipcontent_misc },
+    "conllu2korapxml runs with MISC column data"
+);
+
+my $zipfile_misc = "$test_tempdir/test_misc.zip";
+if ($zipcontent_misc) {
+    open(my $zfh, '>:raw', $zipfile_misc) or die "Cannot write zip: $!";
+    print $zfh $zipcontent_misc;
+    close($zfh);
+
+    my $morpho_xml = `$UNZIP -p $zipfile_misc 'TEST/TEST/TEST_MISC_001/ud/morpho.xml' 2>/dev/null`;
+
+    # SpaceAfter=No|Tag=NNN -> only Tag=NNN kept
+    like($morpho_xml,
+        qr/<f name="misc">Tag=NNN<\/f>/,
+        "MISC: SpaceAfter=No filtered, Tag=NNN kept");
+
+    unlike($morpho_xml,
+        qr/<f name="misc">SpaceAfter=No\|Tag=NNN<\/f>/,
+        "MISC: raw SpaceAfter=No|Tag not stored verbatim");
+
+    # Pure Tag=LLL (no SpaceAfter) -> preserved unchanged
+    like($morpho_xml,
+        qr/<f name="misc">Tag=LLL<\/f>/,
+        "MISC: pure non-SpaceAfter value preserved unchanged");
+
+    # SpaceAfter=No alone -> no misc element at all
+    my ($s1_n3_block) = $morpho_xml =~ /(id="s1_n3".*?<\/span>)/s;
+    ok(defined $s1_n3_block, "Found span block for s1_n3");
+    unlike($s1_n3_block // '',
+        qr/<f name="misc">/,
+        "MISC: SpaceAfter=No alone produces no misc element");
+    unlike($s1_n3_block // '',
+        qr/<f name="certainty">/,
+        "MISC: SpaceAfter=No alone produces no certainty element");
+
+    # SpacesAfter=\n|Tag=MMM -> only Tag=MMM kept
+    like($morpho_xml,
+        qr/<f name="misc">Tag=MMM<\/f>/,
+        "MISC: SpacesAfter filtered, Tag=MMM kept");
+
+    unlike($morpho_xml,
+        qr/SpacesAfter/,
+        "MISC: no SpacesAfter value appears in output");
+
+    unlike($morpho_xml,
+        qr/SpaceAfter/,
+        "MISC: no SpaceAfter value appears in output at all");
+}
+else {
+    fail("MISC: SpaceAfter=No filtered, Tag=NNN kept");
+    fail("MISC: raw SpaceAfter=No|Tag not stored verbatim");
+    fail("MISC: pure non-SpaceAfter value preserved unchanged");
+    fail("Found span block for s1_n3");
+    fail("MISC: SpaceAfter=No alone produces no misc element");
+    fail("MISC: SpaceAfter=No alone produces no certainty element");
+    fail("MISC: SpacesAfter filtered, Tag=MMM kept");
+    fail("MISC: no SpacesAfter value appears in output");
+    fail("MISC: no SpaceAfter value appears in output at all");
 }
 
 done_testing;
